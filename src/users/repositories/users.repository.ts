@@ -1,4 +1,12 @@
-// User repository - typically extends TypeOrmRepository<User> or similar
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../entities/user.entity';
+
+@Injectable()
 export class UsersRepository {
-  // TODO: Add database query methods
+  constructor(
+    @InjectRepository(User)
+    private readonly repository: Repository<User>,
+  ) { }
 }

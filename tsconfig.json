@@ -18,15 +18,15 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "config/*": [
+      "@config/*": [
         "./src/config/*"
       ],
-      "common/*": [
+      "@common/*": [
         "./src/common/*"
       ],
-      "auth/*": [
+      "@auth/*": [
         "./src/auth/*"
-      ],
+      ]
     }
   }
 }

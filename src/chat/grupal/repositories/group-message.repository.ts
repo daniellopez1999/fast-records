@@ -1,9 +1,21 @@
-// Group messages repository
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { GroupMessage } from '../entities/group-message.entity';
+import { GroupChat } from '../entities/group-chat.entity';
+
+@Injectable()
 export class GroupMessagesRepository {
-  // TODO: Add database query methods
+  constructor(
+    @InjectRepository(GroupMessage)
+    private readonly repository: Repository<GroupMessage>,
+  ) { }
 }
 
-// Group chats repository
+@Injectable()
 export class GroupChatsRepository {
-  // TODO: Add database query methods
+  constructor(
+    @InjectRepository(GroupChat)
+    private readonly repository: Repository<GroupChat>,
+  ) { }
 }

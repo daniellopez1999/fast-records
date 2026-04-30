@@ -1,9 +1,21 @@
-// Individual messages repository
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { IndividualMessage } from '../entities/individual-message.entity';
+import { IndividualChat } from '../entities/individual-chat.entity';
+
+@Injectable()
 export class IndividualMessagesRepository {
-  // TODO: Add database query methods
+  constructor(
+    @InjectRepository(IndividualMessage)
+    private readonly repository: Repository<IndividualMessage>,
+  ) { }
 }
 
-// Individual chats repository
+@Injectable()
 export class IndividualChatsRepository {
-  // TODO: Add database query methods
+  constructor(
+    @InjectRepository(IndividualChat)
+    private readonly repository: Repository<IndividualChat>,
+  ) { }
 }
