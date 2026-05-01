@@ -15,6 +15,7 @@ import { RecordsModule } from './records/records.module';
 import { StorageModule } from './storage/storage.module';
 import { AuditModule } from './audit/audit.module';
 import { AuditInterceptor } from './audit/interceptors/audit.interceptor';
+import { AuditPublicInterceptor } from './audit/interceptors/audit-public.interceptor';
 import { ConfigService } from '@nestjs/config';
 
 @Module({
@@ -55,6 +56,10 @@ import { ConfigService } from '@nestjs/config';
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditPublicInterceptor,
     },
   ],
 })
