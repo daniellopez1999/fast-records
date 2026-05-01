@@ -1,0 +1,19 @@
+node_modules
+npm - debug.log
+dist
+  .git
+  .gitignore
+README.md
+  .env.local
+  .env.*.local
+    .env
+coverage
+  .eslintignore
+  .prettierignore
+test
+  .vscode
+  .idea
+  *.swp
+  *.swo
+  * ~
+.DS_Store
