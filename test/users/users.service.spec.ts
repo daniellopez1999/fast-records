@@ -79,10 +79,17 @@ describe('UsersService', () => {
 
       const result = await usersService.createUser(userData);
 
-      expect(result.success).toBe(true);
-      expect(result.statusCode).toBe(201);
-      expect(result.message).toContain('successfully');
-      expect(result.data).toEqual(newUser);
+      expect(result).toEqual({
+        user_id: newUser.user_id,
+        email: newUser.email,
+        first_name: newUser.first_name,
+        last_name: newUser.last_name,
+        user_type: newUser.user_type,
+        profile_photo: newUser.profile_photo,
+        description: newUser.description,
+        last_access: newUser.last_access,
+        active: newUser.active,
+      });
       expect(usersRepository.findByEmail).toHaveBeenCalledWith(queryRunner, userData);
       expect(usersRepository.create).toHaveBeenCalledWith(queryRunner, userData);
     });
@@ -114,11 +121,9 @@ describe('UsersService', () => {
         .spyOn(usersRepository, 'findByEmail')
         .mockResolvedValue(existingUser);
 
-      const result = await usersService.createUser(userData);
-
-      expect(result.success).toBe(false);
-      expect(result.statusCode).toBe(400);
-      expect(result.message).toContain('already exists');
+      await expect(usersService.createUser(userData)).rejects.toThrow(
+        'User with this email already exists'
+      );
       expect(usersRepository.create).not.toHaveBeenCalled();
     });
 

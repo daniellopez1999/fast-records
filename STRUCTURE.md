@@ -21,7 +21,6 @@ fast-records/
 │   │   ├── dto/
 │   │   └── auth.module.ts
 │   │
-│   │
 │   ├── auth/                                    # Authentication and JWT
 │   │   ├── strategies/
 │   │   ├── guards/

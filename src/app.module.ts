@@ -16,6 +16,7 @@ import { StorageModule } from './storage/storage.module';
 import { AuditModule } from './audit/audit.module';
 import { AuditInterceptor } from './audit/interceptors/audit.interceptor';
 import { AuditPublicInterceptor } from './audit/interceptors/audit-public.interceptor';
+import { ResponseInterceptor } from '@common/interceptors/response.interceptor';
 import { ConfigService } from '@nestjs/config';
 
 @Module({
@@ -53,6 +54,10 @@ import { ConfigService } from '@nestjs/config';
   controllers: [AppController],
   providers: [
     AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,

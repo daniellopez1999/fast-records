@@ -1,4 +1,4 @@
-import { Injectable, Res } from '@nestjs/common';
+import { ConflictException, Injectable, Res } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { UsersRepository } from '../repositories/users.repository';
 import { ResponseBuilder } from "@common/utils/response_builder/response.builder"
@@ -13,7 +13,7 @@ export class UsersService {
     return [];
   }
 
-  async createUser(userData: any): Promise<Result<UserWithoutPassword>> {
+  async createUser(userData: any): Promise<UserWithoutPassword> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -23,12 +23,15 @@ export class UsersService {
 
       // If user exists, enters if statement, otherwise creates user
       if (user) {
-        return ResponseBuilder.build("User Email already exists", user, false, 400);
+        throw new ConflictException('User with this email already exists');
       }
 
       const userCreated = await this.usersRepository.create(queryRunner, userData);
       await queryRunner.commitTransaction();
-      return ResponseBuilder.build("User created successfully", userCreated, true, 201);
+      
+      // Exclude password and timestamps
+      const { password, created_at, updated_at, ...userWithoutSensitiveData } = userCreated;
+      return userWithoutSensitiveData as UserWithoutPassword;
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw err;

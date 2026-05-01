@@ -11,6 +11,6 @@ import { AuditController } from './controllers/audit.controller';
   imports: [TypeOrmModule.forFeature([AuditLog])],
   providers: [AuditService, AuditLogRepository, AuditInterceptor, AuditPublicInterceptor],
   controllers: [AuditController],
-  exports: [AuditService, AuditInterceptor, AuditPublicInterceptor, 'AUDIT_DECORATOR'],
+  exports: [AuditService, AuditInterceptor, AuditPublicInterceptor],
 })
 export class AuditModule { }

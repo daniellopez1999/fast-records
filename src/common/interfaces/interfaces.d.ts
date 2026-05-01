@@ -16,3 +16,8 @@ export interface UserWithoutPassword {
   last_access: Date;
   active: boolean;
 }
+
+export interface RegisterResponse {
+  access_token: string;
+  user: UserWithoutPassword;
+}

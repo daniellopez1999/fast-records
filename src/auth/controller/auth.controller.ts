@@ -1,21 +1,44 @@
-import { Result, UserWithoutPassword } from '@common/interfaces/interfaces';
-import { Body, Controller, Post } from '@nestjs/common';
-import { UsersService } from '../../users/services/users.service';
-import { AuditPublic } from 'src/audit/decorators';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { AuthService } from '../services/auth.service';
+import { CreateUserDto } from '../dto/create-user.dto';
+import { LocalAuthGuard } from '../guards/local-auth.guard';
+import { AuditPublic } from '../../audit/decorators';
+import { RegisterResponse, Result, } from '@common/interfaces/interfaces';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly authService: AuthService) { }
+
   /**
-   * Calls the createUser method in the UsersService to register a new user. 
-   * It takes the user data from the request body and returns the result of the user creation process.
-   * @param userData 
-   * @returns 
+   * Registers a new user
+   * Validates input with CreateUserDto and hashes password
+   * Returns JWT access token on success
+   * 
+   * @param createUserDto User registration data
+   * @returns Created user with access token
    */
   @AuditPublic()
   @Post('register')
-  register(@Body() userData: any): Promise<Result<UserWithoutPassword>> {
-    return this.usersService.createUser(userData);
+  async register(
+    @Body()
+    createUserDto: CreateUserDto,
+  ): Promise<Result<RegisterResponse | null>> {
+    return this.authService.register(createUserDto);
   }
 
+  /**
+   * Logs in a user
+   * Uses LocalAuthGuard to validate credentials
+   * Returns JWT access token on success
+   * 
+   * @param user Authenticated user object (from LocalAuthGuard)
+   * @returns Access token
+   */
+  @AuditPublic()
+  @UseGuards(LocalAuthGuard)
+  @Post('login')
+  async login(@CurrentUser() user: any): Promise<any> {
+    return this.authService.login(user);
+  }
 }
