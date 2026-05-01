@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { DataSource, QueryRunner } from 'typeorm';
 import { AuditService } from '../../src/audit/services/audit.service';
 import { AuditLogRepository } from '../../src/audit/repositories/audit-log.repository';
 import { AuditLog, AuditStatus } from '../../src/audit/entities/audit-log.entity';
@@ -6,6 +7,8 @@ import { AuditLog, AuditStatus } from '../../src/audit/entities/audit-log.entity
 describe('AuditService', () => {
   let auditService: AuditService;
   let auditLogRepository: AuditLogRepository;
+  let mockDataSource: Partial<DataSource>;
+  let mockQueryRunner: Partial<QueryRunner>;
 
   const mockAuditLog: AuditLog = {
     id: 'audit-id-123',
@@ -28,6 +31,20 @@ describe('AuditService', () => {
   };
 
   beforeEach(async () => {
+    mockQueryRunner = {
+      connect: jest.fn().mockResolvedValue(undefined),
+      release: jest.fn().mockResolvedValue(undefined),
+      manager: {
+        save: jest.fn(),
+        findOneBy: jest.fn(),
+        find: jest.fn(),
+      } as any,
+    };
+
+    mockDataSource = {
+      createQueryRunner: jest.fn().mockReturnValue(mockQueryRunner),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuditService,
@@ -39,6 +56,10 @@ describe('AuditService', () => {
             findByUserId: jest.fn(),
             findByEndpoint: jest.fn(),
           },
+        },
+        {
+          provide: DataSource,
+          useValue: mockDataSource,
         },
       ],
     }).compile();
@@ -59,7 +80,7 @@ describe('AuditService', () => {
         ip: '192.168.1.1',
       };
 
-      jest.spyOn(auditLogRepository, 'create').mockResolvedValue(mockAuditLog);
+      (auditLogRepository.create as jest.Mock).mockResolvedValue(mockAuditLog);
 
       const result = await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
@@ -73,7 +94,10 @@ describe('AuditService', () => {
           http_method: 'GET',
           endpoint: '/test',
         }),
+        mockQueryRunner,
       );
+      expect(mockQueryRunner.connect).toHaveBeenCalled();
+      expect(mockQueryRunner.release).toHaveBeenCalled();
     });
 
     it('should extract device info from user agent', async () => {
@@ -87,7 +111,7 @@ describe('AuditService', () => {
         ip: '192.168.1.1',
       };
 
-      jest.spyOn(auditLogRepository, 'create').mockResolvedValue(mockAuditLog);
+      (auditLogRepository.create as jest.Mock).mockResolvedValue(mockAuditLog);
 
       await auditService.logRequestStart(req, 'UsersController', 'create');
 
@@ -106,7 +130,7 @@ describe('AuditService', () => {
         ip: '192.168.1.1',
       };
 
-      jest.spyOn(auditLogRepository, 'create').mockResolvedValue(mockAuditLog);
+      (auditLogRepository.create as jest.Mock).mockResolvedValue(mockAuditLog);
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
@@ -124,7 +148,7 @@ describe('AuditService', () => {
         originalUrl: '/test',
       };
 
-      jest.spyOn(auditLogRepository, 'create').mockResolvedValue(mockAuditLog);
+      (auditLogRepository.create as jest.Mock).mockResolvedValue(mockAuditLog);
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
@@ -132,14 +156,15 @@ describe('AuditService', () => {
         expect.objectContaining({
           ip_address: '203.0.113.1',
         }),
+        mockQueryRunner,
       );
     });
   });
 
   describe('logRequestEnd', () => {
     it('should create a finished audit log on success', async () => {
-      jest.spyOn(auditLogRepository, 'findById').mockResolvedValue(mockAuditLog);
-      jest.spyOn(auditLogRepository, 'create').mockResolvedValue({
+      (auditLogRepository.findById as jest.Mock).mockResolvedValue(mockAuditLog);
+      (auditLogRepository.create as jest.Mock).mockResolvedValue({
         ...mockAuditLog,
         status: AuditStatus.FINISHED,
         status_code: 200,
@@ -155,12 +180,15 @@ describe('AuditService', () => {
           status_code: 200,
           duration_ms: 150,
         }),
+        mockQueryRunner,
       );
+      expect(mockQueryRunner.connect).toHaveBeenCalled();
+      expect(mockQueryRunner.release).toHaveBeenCalled();
     });
 
     it('should create a finished_with_error audit log on error', async () => {
-      jest.spyOn(auditLogRepository, 'findById').mockResolvedValue(mockAuditLog);
-      jest.spyOn(auditLogRepository, 'create').mockResolvedValue({
+      (auditLogRepository.findById as jest.Mock).mockResolvedValue(mockAuditLog);
+      (auditLogRepository.create as jest.Mock).mockResolvedValue({
         ...mockAuditLog,
         status: AuditStatus.FINISHED_WITH_ERROR,
         status_code: 500,
@@ -175,7 +203,7 @@ describe('AuditService', () => {
     });
 
     it('should throw error if started log not found', async () => {
-      jest.spyOn(auditLogRepository, 'findById').mockResolvedValue(null);
+      (auditLogRepository.findById as jest.Mock).mockResolvedValue(null);
 
       await expect(
         auditService.logRequestEnd('non-existent-id', 200),
@@ -183,8 +211,8 @@ describe('AuditService', () => {
     });
 
     it('should copy all data from started log to finished log', async () => {
-      jest.spyOn(auditLogRepository, 'findById').mockResolvedValue(mockAuditLog);
-      jest.spyOn(auditLogRepository, 'create').mockResolvedValue({
+      (auditLogRepository.findById as jest.Mock).mockResolvedValue(mockAuditLog);
+      (auditLogRepository.create as jest.Mock).mockResolvedValue({
         ...mockAuditLog,
         status: AuditStatus.FINISHED,
       });
@@ -200,12 +228,13 @@ describe('AuditService', () => {
           device: mockAuditLog.device,
           endpoint: mockAuditLog.endpoint,
         }),
+        mockQueryRunner,
       );
     });
 
     it('should include started_log_id in metadata', async () => {
-      jest.spyOn(auditLogRepository, 'findById').mockResolvedValue(mockAuditLog);
-      jest.spyOn(auditLogRepository, 'create').mockResolvedValue({
+      (auditLogRepository.findById as jest.Mock).mockResolvedValue(mockAuditLog);
+      (auditLogRepository.create as jest.Mock).mockResolvedValue({
         ...mockAuditLog,
         status: AuditStatus.FINISHED,
       });
@@ -218,6 +247,7 @@ describe('AuditService', () => {
             started_log_id: 'audit-id-123',
           }),
         }),
+        mockQueryRunner,
       );
     });
   });
@@ -225,24 +255,26 @@ describe('AuditService', () => {
   describe('getUserAuditLogs', () => {
     it('should return audit logs for a specific user', async () => {
       const mockLogs: AuditLog[] = [mockAuditLog];
-      jest.spyOn(auditLogRepository, 'findByUserId').mockResolvedValue(mockLogs);
+      (auditLogRepository.findByUserId as jest.Mock).mockResolvedValue(mockLogs);
 
       const result = await auditService.getUserAuditLogs('user-123', 50);
 
       expect(result).toEqual(mockLogs);
-      expect(auditLogRepository.findByUserId).toHaveBeenCalledWith('user-123', 50);
+      expect(auditLogRepository.findByUserId).toHaveBeenCalledWith('user-123', mockQueryRunner, 50);
+      expect(mockQueryRunner.connect).toHaveBeenCalled();
+      expect(mockQueryRunner.release).toHaveBeenCalled();
     });
 
     it('should use default limit if not provided', async () => {
-      jest.spyOn(auditLogRepository, 'findByUserId').mockResolvedValue([]);
+      (auditLogRepository.findByUserId as jest.Mock).mockResolvedValue([]);
 
       await auditService.getUserAuditLogs('user-123');
 
-      expect(auditLogRepository.findByUserId).toHaveBeenCalledWith('user-123', undefined);
+      expect(auditLogRepository.findByUserId).toHaveBeenCalledWith('user-123', mockQueryRunner, undefined);
     });
 
     it('should return empty array if no logs found', async () => {
-      jest.spyOn(auditLogRepository, 'findByUserId').mockResolvedValue([]);
+      (auditLogRepository.findByUserId as jest.Mock).mockResolvedValue([]);
 
       const result = await auditService.getUserAuditLogs('user-123');
 
@@ -253,20 +285,22 @@ describe('AuditService', () => {
   describe('getEndpointAuditLogs', () => {
     it('should return audit logs for a specific endpoint', async () => {
       const mockLogs: AuditLog[] = [mockAuditLog];
-      jest.spyOn(auditLogRepository, 'findByEndpoint').mockResolvedValue(mockLogs);
+      (auditLogRepository.findByEndpoint as jest.Mock).mockResolvedValue(mockLogs);
 
       const result = await auditService.getEndpointAuditLogs('/test', 100);
 
       expect(result).toEqual(mockLogs);
-      expect(auditLogRepository.findByEndpoint).toHaveBeenCalledWith('/test', 100);
+      expect(auditLogRepository.findByEndpoint).toHaveBeenCalledWith('/test', mockQueryRunner, 100);
+      expect(mockQueryRunner.connect).toHaveBeenCalled();
+      expect(mockQueryRunner.release).toHaveBeenCalled();
     });
 
     it('should handle complex endpoints', async () => {
-      jest.spyOn(auditLogRepository, 'findByEndpoint').mockResolvedValue([]);
+      (auditLogRepository.findByEndpoint as jest.Mock).mockResolvedValue([]);
 
       await auditService.getEndpointAuditLogs('/api/users/123/profile');
 
-      expect(auditLogRepository.findByEndpoint).toHaveBeenCalledWith('/api/users/123/profile', undefined);
+      expect(auditLogRepository.findByEndpoint).toHaveBeenCalledWith('/api/users/123/profile', mockQueryRunner, undefined);
     });
   });
 
@@ -282,7 +316,7 @@ describe('AuditService', () => {
         ip: '192.168.1.1',
       };
 
-      jest.spyOn(auditLogRepository, 'create').mockResolvedValue(mockAuditLog);
+      (auditLogRepository.create as jest.Mock).mockResolvedValue(mockAuditLog);
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
@@ -292,6 +326,7 @@ describe('AuditService', () => {
             browser: 'Firefox',
           }),
         }),
+        mockQueryRunner,
       );
     });
 
@@ -306,7 +341,7 @@ describe('AuditService', () => {
         ip: '192.168.1.1',
       };
 
-      jest.spyOn(auditLogRepository, 'create').mockResolvedValue(mockAuditLog);
+      (auditLogRepository.create as jest.Mock).mockResolvedValue(mockAuditLog);
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
@@ -327,7 +362,7 @@ describe('AuditService', () => {
         ip: '192.168.1.1',
       };
 
-      jest.spyOn(auditLogRepository, 'create').mockResolvedValue(mockAuditLog);
+      (auditLogRepository.create as jest.Mock).mockResolvedValue(mockAuditLog);
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
@@ -346,7 +381,7 @@ describe('AuditService', () => {
         ip: '192.168.1.1',
       };
 
-      jest.spyOn(auditLogRepository, 'create').mockResolvedValue(mockAuditLog);
+      (auditLogRepository.create as jest.Mock).mockResolvedValue(mockAuditLog);
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
@@ -365,7 +400,7 @@ describe('AuditService', () => {
         ip: '192.168.1.1',
       };
 
-      jest.spyOn(auditLogRepository, 'create').mockResolvedValue(mockAuditLog);
+      (auditLogRepository.create as jest.Mock).mockResolvedValue(mockAuditLog);
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
@@ -384,7 +419,7 @@ describe('AuditService', () => {
         ip: '192.168.1.1',
       };
 
-      jest.spyOn(auditLogRepository, 'create').mockResolvedValue(mockAuditLog);
+      (auditLogRepository.create as jest.Mock).mockResolvedValue(mockAuditLog);
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
@@ -404,7 +439,7 @@ describe('AuditService', () => {
         ip: '192.168.1.1',
       };
 
-      jest.spyOn(auditLogRepository, 'create').mockResolvedValue(mockAuditLog);
+      (auditLogRepository.create as jest.Mock).mockResolvedValue(mockAuditLog);
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
@@ -412,6 +447,7 @@ describe('AuditService', () => {
         expect.objectContaining({
           device: 'tablet',
         }),
+        mockQueryRunner,
       );
     });
 
@@ -426,7 +462,7 @@ describe('AuditService', () => {
         ip: '192.168.1.1',
       };
 
-      jest.spyOn(auditLogRepository, 'create').mockResolvedValue(mockAuditLog);
+      (auditLogRepository.create as jest.Mock).mockResolvedValue(mockAuditLog);
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
@@ -446,7 +482,7 @@ describe('AuditService', () => {
         ip: '192.168.1.1',
       };
 
-      jest.spyOn(auditLogRepository, 'create').mockResolvedValue(mockAuditLog);
+      (auditLogRepository.create as jest.Mock).mockResolvedValue(mockAuditLog);
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
@@ -466,7 +502,7 @@ describe('AuditService', () => {
         ip: '192.168.1.1',
       };
 
-      jest.spyOn(auditLogRepository, 'create').mockResolvedValue(mockAuditLog);
+      (auditLogRepository.create as jest.Mock).mockResolvedValue(mockAuditLog);
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
@@ -486,7 +522,7 @@ describe('AuditService', () => {
         ip: '192.168.1.1',
       };
 
-      jest.spyOn(auditLogRepository, 'create').mockResolvedValue(mockAuditLog);
+      (auditLogRepository.create as jest.Mock).mockResolvedValue(mockAuditLog);
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 

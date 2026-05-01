@@ -1,12 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryRunner } from 'typeorm';
 import { AuditLogRepository } from '../../src/audit/repositories/audit-log.repository';
 import { AuditLog, AuditStatus } from '../../src/audit/entities/audit-log.entity';
 
 describe('AuditLogRepository', () => {
   let auditLogRepository: AuditLogRepository;
-  let repository: Repository<AuditLog>;
+  let mockQueryRunner: Partial<QueryRunner>;
 
   const mockAuditLog: AuditLog = {
     id: 'audit-id-123',
@@ -29,22 +28,15 @@ describe('AuditLogRepository', () => {
   };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        AuditLogRepository,
-        {
-          provide: getRepositoryToken(AuditLog),
-          useValue: {
-            save: jest.fn(),
-            findOneBy: jest.fn(),
-            find: jest.fn(),
-          },
-        },
-      ],
-    }).compile();
+    mockQueryRunner = {
+      manager: {
+        save: jest.fn(),
+        findOneBy: jest.fn(),
+        find: jest.fn(),
+      } as any,
+    };
 
-    auditLogRepository = module.get<AuditLogRepository>(AuditLogRepository);
-    repository = module.get<Repository<AuditLog>>(getRepositoryToken(AuditLog));
+    auditLogRepository = new AuditLogRepository();
   });
 
   describe('create', () => {
@@ -56,37 +48,37 @@ describe('AuditLogRepository', () => {
         status: AuditStatus.STARTED,
       };
 
-      jest.spyOn(repository, 'save').mockResolvedValue(mockAuditLog);
+      (mockQueryRunner.manager!.save as jest.Mock).mockResolvedValue(mockAuditLog);
 
-      const result = await auditLogRepository.create(auditData);
+      const result = await auditLogRepository.create(auditData, mockQueryRunner as QueryRunner);
 
       expect(result).toEqual(mockAuditLog);
-      expect(repository.save).toHaveBeenCalledWith(auditData);
+      expect(mockQueryRunner.manager!.save).toHaveBeenCalledWith(AuditLog, auditData);
     });
 
     it('should handle creation errors', async () => {
-      jest.spyOn(repository, 'save').mockRejectedValue(new Error('DB error'));
+      (mockQueryRunner.manager!.save as jest.Mock).mockRejectedValue(new Error('DB error'));
 
       await expect(
-        auditLogRepository.create({ user_id: 'user-123' }),
+        auditLogRepository.create({ user_id: 'user-123' }, mockQueryRunner as QueryRunner),
       ).rejects.toThrow('DB error');
     });
   });
 
   describe('findById', () => {
     it('should find an audit log by ID', async () => {
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockAuditLog);
+      (mockQueryRunner.manager!.findOneBy as jest.Mock).mockResolvedValue(mockAuditLog);
 
-      const result = await auditLogRepository.findById('audit-id-123');
+      const result = await auditLogRepository.findById('audit-id-123', mockQueryRunner as QueryRunner);
 
       expect(result).toEqual(mockAuditLog);
-      expect(repository.findOneBy).toHaveBeenCalledWith({ id: 'audit-id-123' });
+      expect(mockQueryRunner.manager!.findOneBy).toHaveBeenCalledWith(AuditLog, { id: 'audit-id-123' });
     });
 
     it('should return null if audit log not found', async () => {
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(null);
+      (mockQueryRunner.manager!.findOneBy as jest.Mock).mockResolvedValue(null);
 
-      const result = await auditLogRepository.findById('non-existent-id');
+      const result = await auditLogRepository.findById('non-existent-id', mockQueryRunner as QueryRunner);
 
       expect(result).toBeNull();
     });
@@ -95,12 +87,12 @@ describe('AuditLogRepository', () => {
   describe('findByUserId', () => {
     it('should find all audit logs for a user', async () => {
       const mockLogs: AuditLog[] = [mockAuditLog, mockAuditLog];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockLogs);
+      (mockQueryRunner.manager!.find as jest.Mock).mockResolvedValue(mockLogs);
 
-      const result = await auditLogRepository.findByUserId('user-123', 50);
+      const result = await auditLogRepository.findByUserId('user-123', mockQueryRunner as QueryRunner, 50);
 
       expect(result).toEqual(mockLogs);
-      expect(repository.find).toHaveBeenCalledWith({
+      expect(mockQueryRunner.manager!.find).toHaveBeenCalledWith(AuditLog, {
         where: { user_id: 'user-123' },
         order: { created_at: 'DESC' },
         take: 50,
@@ -108,11 +100,12 @@ describe('AuditLogRepository', () => {
     });
 
     it('should use default limit of 50', async () => {
-      jest.spyOn(repository, 'find').mockResolvedValue([]);
+      (mockQueryRunner.manager!.find as jest.Mock).mockResolvedValue([]);
 
-      await auditLogRepository.findByUserId('user-123');
+      await auditLogRepository.findByUserId('user-123', mockQueryRunner as QueryRunner);
 
-      expect(repository.find).toHaveBeenCalledWith(
+      expect(mockQueryRunner.manager!.find).toHaveBeenCalledWith(
+        AuditLog,
         expect.objectContaining({
           take: 50,
         }),
@@ -120,19 +113,20 @@ describe('AuditLogRepository', () => {
     });
 
     it('should return empty array if no logs found', async () => {
-      jest.spyOn(repository, 'find').mockResolvedValue([]);
+      (mockQueryRunner.manager!.find as jest.Mock).mockResolvedValue([]);
 
-      const result = await auditLogRepository.findByUserId('user-123');
+      const result = await auditLogRepository.findByUserId('user-123', mockQueryRunner as QueryRunner);
 
       expect(result).toEqual([]);
     });
 
     it('should order by created_at descending', async () => {
-      jest.spyOn(repository, 'find').mockResolvedValue([]);
+      (mockQueryRunner.manager!.find as jest.Mock).mockResolvedValue([]);
 
-      await auditLogRepository.findByUserId('user-123');
+      await auditLogRepository.findByUserId('user-123', mockQueryRunner as QueryRunner);
 
-      expect(repository.find).toHaveBeenCalledWith(
+      expect(mockQueryRunner.manager!.find).toHaveBeenCalledWith(
+        AuditLog,
         expect.objectContaining({
           order: { created_at: 'DESC' },
         }),
@@ -143,12 +137,12 @@ describe('AuditLogRepository', () => {
   describe('findByEndpoint', () => {
     it('should find all audit logs for an endpoint', async () => {
       const mockLogs: AuditLog[] = [mockAuditLog, mockAuditLog];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockLogs);
+      (mockQueryRunner.manager!.find as jest.Mock).mockResolvedValue(mockLogs);
 
-      const result = await auditLogRepository.findByEndpoint('/test', 100);
+      const result = await auditLogRepository.findByEndpoint('/test', mockQueryRunner as QueryRunner, 100);
 
       expect(result).toEqual(mockLogs);
-      expect(repository.find).toHaveBeenCalledWith({
+      expect(mockQueryRunner.manager!.find).toHaveBeenCalledWith(AuditLog, {
         where: { endpoint: '/test' },
         order: { created_at: 'DESC' },
         take: 100,
@@ -156,11 +150,12 @@ describe('AuditLogRepository', () => {
     });
 
     it('should use default limit of 50', async () => {
-      jest.spyOn(repository, 'find').mockResolvedValue([]);
+      (mockQueryRunner.manager!.find as jest.Mock).mockResolvedValue([]);
 
-      await auditLogRepository.findByEndpoint('/api/users');
+      await auditLogRepository.findByEndpoint('/api/users', mockQueryRunner as QueryRunner);
 
-      expect(repository.find).toHaveBeenCalledWith(
+      expect(mockQueryRunner.manager!.find).toHaveBeenCalledWith(
+        AuditLog,
         expect.objectContaining({
           take: 50,
         }),
@@ -168,19 +163,20 @@ describe('AuditLogRepository', () => {
     });
 
     it('should return empty array if no logs found', async () => {
-      jest.spyOn(repository, 'find').mockResolvedValue([]);
+      (mockQueryRunner.manager!.find as jest.Mock).mockResolvedValue([]);
 
-      const result = await auditLogRepository.findByEndpoint('/non-existent');
+      const result = await auditLogRepository.findByEndpoint('/non-existent', mockQueryRunner as QueryRunner);
 
       expect(result).toEqual([]);
     });
 
     it('should handle complex endpoint paths', async () => {
-      jest.spyOn(repository, 'find').mockResolvedValue([]);
+      (mockQueryRunner.manager!.find as jest.Mock).mockResolvedValue([]);
 
-      await auditLogRepository.findByEndpoint('/api/users/123/profile?filter=active');
+      await auditLogRepository.findByEndpoint('/api/users/123/profile?filter=active', mockQueryRunner as QueryRunner);
 
-      expect(repository.find).toHaveBeenCalledWith(
+      expect(mockQueryRunner.manager!.find).toHaveBeenCalledWith(
+        AuditLog,
         expect.objectContaining({
           where: { endpoint: '/api/users/123/profile?filter=active' },
         }),

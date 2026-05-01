@@ -1,25 +1,19 @@
-import { Repository } from 'typeorm';
+import { QueryRunner } from 'typeorm';
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { AuditLog, AuditStatus } from '../entities/audit-log.entity';
 
 @Injectable()
 export class AuditLogRepository {
-  constructor(
-    @InjectRepository(AuditLog)
-    private readonly repository: Repository<AuditLog>,
-  ) { }
-
-  async create(auditLog: Partial<AuditLog>): Promise<AuditLog> {
-    return this.repository.save(auditLog);
+  async create(auditLog: Partial<AuditLog>, queryRunner: QueryRunner): Promise<AuditLog> {
+    return await queryRunner.manager.save(AuditLog, auditLog);
   }
 
-  async findById(id: string): Promise<AuditLog | null> {
-    return this.repository.findOneBy({ id });
+  async findById(id: string, queryRunner: QueryRunner): Promise<AuditLog | null> {
+    return await queryRunner.manager.findOneBy(AuditLog, { id });
   }
 
-  async findByUserId(user_id: string, limit: number = 50): Promise<AuditLog[]> {
-    return this.repository.find({
+  async findByUserId(user_id: string, queryRunner: QueryRunner, limit: number = 50): Promise<AuditLog[]> {
+    return await queryRunner.manager.find(AuditLog, {
       where: { user_id },
       order: { created_at: 'DESC' },
       take: limit,
@@ -28,9 +22,10 @@ export class AuditLogRepository {
 
   async findByEndpoint(
     endpoint: string,
+    queryRunner: QueryRunner,
     limit: number = 50,
   ): Promise<AuditLog[]> {
-    return this.repository.find({
+    return await queryRunner.manager.find(AuditLog, {
       where: { endpoint },
       order: { created_at: 'DESC' },
       take: limit,

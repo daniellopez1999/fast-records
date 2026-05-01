@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { AuditLogRepository } from '../repositories/audit-log.repository';
 import { AuditLog, AuditStatus } from '../entities/audit-log.entity';
 
 @Injectable()
 export class AuditService {
-  constructor(private readonly auditLogRepository: AuditLogRepository) { }
+  constructor(
+    private readonly auditLogRepository: AuditLogRepository,
+    private readonly dataSource: DataSource,
+  ) { }
 
   /**
    * Gets the user agent string and parses it to extract device, browser, OS, and version information.
@@ -98,27 +102,34 @@ export class AuditService {
     controller: string,
     method: string,
   ): Promise<AuditLog> {
-    const userAgent = req.headers?.['user-agent'] || '';
-    const parsed = this.parseUserAgent(userAgent);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
 
-    const auditLog = await this.auditLogRepository.create({
-      user_id: this.getUserId(req),
-      controller,
-      method,
-      status: AuditStatus.STARTED,
-      ip_address: this.getClientIp(req),
-      user_agent: userAgent,
-      device: parsed.device,
-      version: parsed.version,
-      http_method: req.method,
-      endpoint: req.originalUrl || req.url,
-      metadata: {
-        browser: parsed.browser,
-        os: parsed.os,
-      },
-    });
+    try {
+      const userAgent = req.headers?.['user-agent'] || '';
+      const parsed = this.parseUserAgent(userAgent);
 
-    return auditLog;
+      const auditLog = await this.auditLogRepository.create({
+        user_id: this.getUserId(req),
+        controller,
+        method,
+        status: AuditStatus.STARTED,
+        ip_address: this.getClientIp(req),
+        user_agent: userAgent,
+        device: parsed.device,
+        version: parsed.version,
+        http_method: req.method,
+        endpoint: req.originalUrl || req.url,
+        metadata: {
+          browser: parsed.browser,
+          os: parsed.os,
+        },
+      }, queryRunner);
+
+      return auditLog;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   /**
@@ -130,46 +141,60 @@ export class AuditService {
     errorMessage?: string,
     duration_ms?: number,
   ): Promise<AuditLog> {
-    // Get the started log to copy its information
-    const startedLog = await this.auditLogRepository.findById(auditLogId);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
 
-    if (!startedLog) {
-      throw new Error(`Audit log with ID ${auditLogId} not found`);
+    try {
+      // Get the started log to copy its information
+      const startedLog = await this.auditLogRepository.findById(auditLogId, queryRunner);
+
+      if (!startedLog) {
+        throw new Error(`Audit log with ID ${auditLogId} not found`);
+      }
+
+      const isError = statusCode >= 400;
+      const status = isError
+        ? AuditStatus.FINISHED_WITH_ERROR
+        : AuditStatus.FINISHED;
+
+      // Create a new log entry with the end status
+      return await this.auditLogRepository.create({
+        user_id: startedLog.user_id,
+        controller: startedLog.controller,
+        method: startedLog.method,
+        status,
+        ip_address: startedLog.ip_address,
+        user_agent: startedLog.user_agent,
+        device: startedLog.device,
+        version: startedLog.version,
+        http_method: startedLog.http_method,
+        endpoint: startedLog.endpoint,
+        status_code: statusCode,
+        error_message: errorMessage || null,
+        duration_ms: Math.round(duration_ms || 0),
+        metadata: {
+          ...startedLog.metadata,
+          started_log_id: auditLogId,
+        },
+        finished_at: new Date(),
+      }, queryRunner);
+    } finally {
+      await queryRunner.release();
     }
-
-    const isError = statusCode >= 400;
-    const status = isError
-      ? AuditStatus.FINISHED_WITH_ERROR
-      : AuditStatus.FINISHED;
-
-    // Create a new log entry with the end status
-    return this.auditLogRepository.create({
-      user_id: startedLog.user_id,
-      controller: startedLog.controller,
-      method: startedLog.method,
-      status,
-      ip_address: startedLog.ip_address,
-      user_agent: startedLog.user_agent,
-      device: startedLog.device,
-      version: startedLog.version,
-      http_method: startedLog.http_method,
-      endpoint: startedLog.endpoint,
-      status_code: statusCode,
-      error_message: errorMessage || null,
-      duration_ms: Math.round(duration_ms || 0),
-      metadata: {
-        ...startedLog.metadata,
-        started_log_id: auditLogId,
-      },
-      finished_at: new Date(),
-    });
   }
 
   /**
    * Gets the audit logs for a specific user
    */
   async getUserAuditLogs(user_id: string, limit?: number): Promise<AuditLog[]> {
-    return this.auditLogRepository.findByUserId(user_id, limit);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+
+    try {
+      return await this.auditLogRepository.findByUserId(user_id, queryRunner, limit);
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   /**
@@ -179,6 +204,13 @@ export class AuditService {
     endpoint: string,
     limit?: number,
   ): Promise<AuditLog[]> {
-    return this.auditLogRepository.findByEndpoint(endpoint, limit);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+
+    try {
+      return await this.auditLogRepository.findByEndpoint(endpoint, queryRunner, limit);
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

@@ -2,6 +2,9 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+[Project Structure](STRUCTURE.md)
+[Project Planning](PROJECT_PLANNING.md)
+
 ## Project setup
 
 ```bash
