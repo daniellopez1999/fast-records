@@ -15,7 +15,7 @@ export enum UserType {
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  user_id: string;
 
   @Column({ unique: true })
   email: string;
@@ -38,15 +38,14 @@ export class User {
   @Column({ nullable: true })
   description: string;
 
-  @CreateDateColumn()
-  registration_date: Date;
-
   @Column({ nullable: true })
   last_access: Date;
 
   @Column({ default: true })
   active: boolean;
 
+  @CreateDateColumn()
+  created_at: Date;
   @UpdateDateColumn()
   updated_at: Date;
 }
