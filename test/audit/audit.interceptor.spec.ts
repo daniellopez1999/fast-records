@@ -25,6 +25,7 @@ describe('AuditInterceptor', () => {
     endpoint: '/test',
     status_code: null,
     error_message: null,
+    error_json: null,
     metadata: { browser: 'Chrome' },
     duration_ms: null,
     created_at: new Date(),
@@ -138,6 +139,7 @@ describe('AuditInterceptor', () => {
         500,
         'Test error',
         expect.any(Number),
+        mockError,
       );
     });
 
@@ -295,6 +297,7 @@ describe('AuditInterceptor', () => {
         500,
         'Unknown error',
         expect.any(Number),
+        mockError,
       );
     });
 
@@ -338,6 +341,7 @@ describe('AuditInterceptor', () => {
         500,
         'Unknown error',
         expect.any(Number),
+        mockError,
       );
     });
 

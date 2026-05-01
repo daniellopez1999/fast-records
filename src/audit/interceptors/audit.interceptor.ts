@@ -10,6 +10,7 @@ import { tap, catchError } from 'rxjs/operators';
 import { AuditService } from '../services/audit.service';
 import { AuditLog } from '../entities/audit-log.entity';
 import { AUDIT_KEY } from '../decorators/audit.decorator';
+import { Result } from '@common/interfaces/interfaces';
 
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {
@@ -17,6 +18,23 @@ export class AuditInterceptor implements NestInterceptor {
     private readonly auditService: AuditService,
     private readonly reflector: Reflector,
   ) { }
+
+  /**
+   * Checks if the data object is a Result type
+   */
+  private isResult(data: any): data is Result<any> {
+    return (
+      data &&
+      typeof data === 'object' &&
+      'statusCode' in data &&
+      'message' in data &&
+      'data' in data &&
+      'success' in data &&
+      typeof data.statusCode === 'number' &&
+      typeof data.message === 'string' &&
+      typeof data.success === 'boolean'
+    );
+  }
 
   async intercept(
     context: ExecutionContext,
@@ -50,19 +68,38 @@ export class AuditInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       tap((response) => {
-        // Successful request
+        // Check if response is a Result object with error status
         const duration = Date.now() - startTime;
-        const statusCode = res.statusCode || 200;
 
-        this.auditService.logRequestEnd(
-          auditLog.id,
-          statusCode,
-          undefined,
-          duration,
-        );
+        if (this.isResult(response) && response.statusCode >= 400) {
+          // Error response through Result object
+          const errorObject = {
+            statusCode: response.statusCode,
+            message: response.message,
+            success: response.success,
+            data: response.data,
+          };
+
+          this.auditService.logRequestEnd(
+            auditLog.id,
+            response.statusCode,
+            response.message,
+            duration,
+            errorObject,
+          );
+        } else {
+          // Successful request
+          const statusCode = res.statusCode || 200;
+          this.auditService.logRequestEnd(
+            auditLog.id,
+            statusCode,
+            undefined,
+            duration,
+          );
+        }
       }),
       catchError((error) => {
-        // Error request
+        // Error request (exception thrown)
         const duration = Date.now() - startTime;
         const statusCode = error.status || 500;
 
@@ -71,6 +108,7 @@ export class AuditInterceptor implements NestInterceptor {
           statusCode,
           error.message || 'Unknown error',
           duration,
+          error,
         );
 
         return throwError(() => error);
