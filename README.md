@@ -4,6 +4,7 @@
 
 [Project Structure](STRUCTURE.md)
 [Project Planning](PROJECT_PLANNING.md)
+[Audit Decorators](AUDIT_DECORATORS_USAGE.md)
 
 ## Project setup
 
