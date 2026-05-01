@@ -10,6 +10,6 @@ import { AuditController } from './controllers/audit.controller';
   imports: [TypeOrmModule.forFeature([AuditLog])],
   providers: [AuditService, AuditLogRepository, AuditInterceptor],
   controllers: [AuditController],
-  exports: [AuditService, AuditInterceptor],
+  exports: [AuditService, AuditInterceptor, 'AUDIT_DECORATOR'],
 })
 export class AuditModule { }

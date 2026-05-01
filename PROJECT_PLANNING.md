@@ -2,7 +2,7 @@
 
 ## Overall Vision
 
-Fast Records is a modular backend that allows you to:
+Fast Records an application to Organize Events, Track Days and meet people related to Motorbike world, which will allow:
 - **Manage users** with secure authentication
 - **Register events** with participants and photos
 - **Organize circuits** with additional information
@@ -10,35 +10,9 @@ Fast Records is a modular backend that allows you to:
 - **Personalized notifications**
 - **File storage**
 - **Complete audit** of actions (logging)
+- **More Features**
 
 All built as a modular microservices system that can grow without headaches.
-
-## General Architecture
-
-```
-┌─────────────────────────────────────┐
-│      FRONTEND (Not included)        │
-│      (React, Angular, etc)          │
-└────────────────────┬────────────────┘
-                     │
-                     ↓
-┌─────────────────────────────────────┐
-│      API REST (NestJS)              │
-│   (Fast Records Backend)            │
-└────────────────────┬────────────────┘
-                     │
-        ┌────────────┼────────────┐
-        ↓            ↓            ↓
-   ┌─────────┐ ┌─────────┐ ┌─────────┐
-   │  Auth   │ │  Users  │ │ Events  │
-   └─────────┘ └─────────┘ └─────────┘
-        │            │            │
-        └────────────┼────────────┘
-                     ↓
-          ┌──────────────────────┐
-          │  PostgreSQL (DB)     │
-          └──────────────────────┘
-```
 
 ## Main Modules
 
@@ -48,16 +22,12 @@ The entry point for security. Handles:
 - JWT authentication
 - Permission validation
 
-**Why separate:** Keeping authentication logic independent makes it easy to change it or add new methods (OAuth, etc) without touching the rest of the system.
-
 ### 2. **Users Module**
 Manages all user information:
 - User profiles
 - Different user types (ADMIN, MODERATOR, USER)
 - Personal information (name, photo, description)
 - Access history
-
-**Design rationale:** Users are the center of everything. All other modules need to know who is doing what.
 
 ### 3. **Events Module**
 Event registration with:
@@ -66,22 +36,17 @@ Event registration with:
 - Event photos
 - Many-to-many relationships with users
 
-**Use case:** Register meetings, conferences, social activities, etc. With the ability to know exactly who participated.
-
 ### 4. **Circuits Module**
 Manages circuits (routes, processes, etc):
 - Circuit information
 - Associated photos
 - Additional metadata
 
-**Thinking behind it:** A circuit is a route or process that can have many points of interest or stages. It's flexible.
 
 ### 5. **Chat Module**
 Real-time communication:
 - **Individual Chat:** Direct messages between two users
 - **Group Chat:** Conversations with multiple participants
-
-**Architecture:** Separated into two sub-modules because needs are different (1-to-1 vs 1-to-many relationship).
 
 ### 6. **Notifications Module**
 Notification system:
@@ -89,15 +54,11 @@ Notification system:
 - Different notification types
 - Notification history
 
-**Added value:** Allows users to be informed in real-time of important events.
-
 ### 7. **Storage Module**
 File handling:
 - Secure upload/download
 - Photo storage
 - File type management
-
-**Advantage:** Centralizing storage logic allows changing the backend (local disk, AWS S3, etc) without touching the rest of the app.
 
 ### 8. **Audit Module**
 Complete audit and logging:
@@ -105,8 +66,6 @@ Complete audit and logging:
 - Captures user_id, IP, device, browser
 - Measures endpoint performance
 - History of who did what, when
-
-**Why it matters:** In production, you need to know exactly what happened. Who accessed, when it failed, what took too long.
 
 ### 9. **Common Module**
 Shared utilities:
@@ -116,15 +75,11 @@ Shared utilities:
 - Custom exceptions
 - Response utilities
 
-**Philosophy:** DRY (Don't Repeat Yourself) - if something is used in multiple modules, it goes here.
-
 ### 10. **Config Module**
 Centralized configuration:
 - Environment variables
 - Configuration validation with Zod
 - Environment-specific config (dev, staging, prod)
-
-**Reason:** We want to be explicit about what the app needs to run, without magic values scattered throughout the code.
 
 ## Important Technical Decisions
 
@@ -145,6 +100,5 @@ Centralized configuration:
 
 ### 6. QueryRunner for Transactions
 **Why:** Allows fine-grained control - we can rollback if something explodes without losing everything.
-
 
 ---

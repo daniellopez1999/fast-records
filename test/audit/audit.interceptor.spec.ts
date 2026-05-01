@@ -2,12 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuditInterceptor } from '../../src/audit/interceptors/audit.interceptor';
 import { AuditService } from '../../src/audit/services/audit.service';
 import { ExecutionContext, CallHandler } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { Observable, of, throwError } from 'rxjs';
 import { AuditLog, AuditStatus } from '../../src/audit/entities/audit-log.entity';
 
 describe('AuditInterceptor', () => {
   let auditInterceptor: AuditInterceptor;
   let auditService: AuditService;
+  let reflector: Reflector;
 
   const mockAuditLog: AuditLog = {
     id: 'audit-id-123',
@@ -40,11 +42,13 @@ describe('AuditInterceptor', () => {
             logRequestEnd: jest.fn(),
           },
         },
+        Reflector,
       ],
     }).compile();
 
     auditInterceptor = module.get<AuditInterceptor>(AuditInterceptor);
     auditService = module.get<AuditService>(AuditService);
+    reflector = module.get<Reflector>(Reflector);
   });
 
   describe('intercept', () => {
@@ -54,6 +58,9 @@ describe('AuditInterceptor', () => {
       const mockHandler: CallHandler = {
         handle: () => of({ data: 'test' }),
       };
+
+      // Mock the reflector to return true (decorator is present)
+      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(true);
 
       const mockContext = {
         switchToHttp: () => ({
@@ -97,6 +104,9 @@ describe('AuditInterceptor', () => {
         handle: () => throwError(() => mockError),
       };
 
+      // Mock the reflector to return true (decorator is present)
+      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(true);
+
       const mockContext = {
         switchToHttp: () => ({
           getRequest: () => mockRequest,
@@ -135,6 +145,9 @@ describe('AuditInterceptor', () => {
       const mockRequest = { method: 'GET' };
       const mockResponse = { statusCode: 200 };
       const mockHandler = { name: 'getUserById' };
+
+      // Mock the reflector to return true (decorator is present)
+      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(true);
 
       const mockContext = {
         switchToHttp: () => ({
@@ -177,6 +190,9 @@ describe('AuditInterceptor', () => {
         }),
       };
 
+      // Mock the reflector to return true (decorator is present)
+      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(true);
+
       const mockContext = {
         switchToHttp: () => ({
           getRequest: () => mockRequest,
@@ -210,6 +226,9 @@ describe('AuditInterceptor', () => {
       const mockHandler: CallHandler = {
         handle: () => of({ data: 'test' }),
       };
+
+      // Mock the reflector to return true (decorator is present)
+      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(true);
 
       const mockContext = {
         switchToHttp: () => ({
@@ -246,6 +265,9 @@ describe('AuditInterceptor', () => {
       const mockHandler: CallHandler = {
         handle: () => throwError(() => mockError),
       };
+
+      // Mock the reflector to return true (decorator is present)
+      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(true);
 
       const mockContext = {
         switchToHttp: () => ({
@@ -287,6 +309,9 @@ describe('AuditInterceptor', () => {
         handle: () => throwError(() => mockError),
       };
 
+      // Mock the reflector to return true (decorator is present)
+      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(true);
+
       const mockContext = {
         switchToHttp: () => ({
           getRequest: () => mockRequest,
@@ -312,6 +337,77 @@ describe('AuditInterceptor', () => {
         'audit-id-123',
         500,
         'Unknown error',
+        expect.any(Number),
+      );
+    });
+
+    it('should skip audit when @Audit() decorator is not present', async () => {
+      const mockRequest = { method: 'GET', originalUrl: '/test' };
+      const mockResponse = { statusCode: 200 };
+      const mockHandler: CallHandler = {
+        handle: () => of({ data: 'test' }),
+      };
+
+      // Reflector returns undefined (no decorator)
+      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(undefined);
+
+      const mockContext = {
+        switchToHttp: () => ({
+          getRequest: () => mockRequest,
+          getResponse: () => mockResponse,
+        }),
+        getHandler: () => ({}),
+        getClass: () => ({ name: 'AuthController' }),
+      } as unknown as ExecutionContext;
+
+      const result = await auditInterceptor.intercept(mockContext, mockHandler);
+
+      await new Promise((resolve) => {
+        result.subscribe(() => resolve(null));
+      });
+
+      // Should not call audit service
+      expect(auditService.logRequestStart).not.toHaveBeenCalled();
+      expect(auditService.logRequestEnd).not.toHaveBeenCalled();
+    });
+
+    it('should audit when @Audit() decorator is present', async () => {
+      const mockRequest = { method: 'GET', originalUrl: '/test' };
+      const mockResponse = { statusCode: 200 };
+      const mockHandler: CallHandler = {
+        handle: () => of({ data: 'test' }),
+      };
+
+      // Reflector returns true (decorator is present)
+      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(true);
+      jest.spyOn(auditService, 'logRequestStart').mockResolvedValue(mockAuditLog);
+      jest.spyOn(auditService, 'logRequestEnd').mockResolvedValue({
+        ...mockAuditLog,
+        status: AuditStatus.FINISHED,
+        status_code: 200,
+      });
+
+      const mockContext = {
+        switchToHttp: () => ({
+          getRequest: () => mockRequest,
+          getResponse: () => mockResponse,
+        }),
+        getHandler: () => ({}),
+        getClass: () => ({ name: 'UsersController' }),
+      } as unknown as ExecutionContext;
+
+      const result = await auditInterceptor.intercept(mockContext, mockHandler);
+
+      await new Promise((resolve) => {
+        result.subscribe(() => resolve(null));
+      });
+
+      // Should call audit service
+      expect(auditService.logRequestStart).toHaveBeenCalled();
+      expect(auditService.logRequestEnd).toHaveBeenCalledWith(
+        'audit-id-123',
+        200,
+        undefined,
         expect.any(Number),
       );
     });

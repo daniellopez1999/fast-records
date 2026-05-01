@@ -4,19 +4,35 @@ import {
   ExecutionContext,
   CallHandler,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { AuditService } from '../services/audit.service';
 import { AuditLog } from '../entities/audit-log.entity';
+import { AUDIT_KEY } from '../decorators/audit.decorator';
 
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {
-  constructor(private readonly auditService: AuditService) { }
+  constructor(
+    private readonly auditService: AuditService,
+    private readonly reflector: Reflector,
+  ) { }
 
   async intercept(
     context: ExecutionContext,
     next: CallHandler,
   ): Promise<Observable<any>> {
+    // Check if method has @Audit() decorator
+    const shouldAudit = this.reflector.getAllAndOverride<boolean>(AUDIT_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    // If no decorator, continue without auditing
+    if (!shouldAudit) {
+      return next.handle();
+    }
+
     const req = context.switchToHttp().getRequest();
     const res = context.switchToHttp().getResponse();
     const handler = context.getHandler();
