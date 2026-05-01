@@ -13,6 +13,15 @@ fast-records/
 │   │   ├── env.schema.ts                       # Zod schema with validations
 │   │   └── README.md                           # Usage documentation
 │   │
+│   ├── audit/                                    # Audit / Logging with Interceptors
+│   │   ├── controllers/
+│   │   ├── guards/
+│   │   ├── interfaces/
+│   │   ├── services/
+│   │   ├── dto/
+│   │   └── auth.module.ts
+│   │
+│   │
 │   ├── auth/                                    # Authentication and JWT
 │   │   ├── strategies/
 │   │   ├── guards/
