@@ -21,6 +21,7 @@ describe('AuditLogRepository', () => {
     endpoint: '/test',
     status_code: 200,
     error_message: null,
+    error_json: null,
     metadata: { browser: 'Chrome' },
     duration_ms: 100,
     created_at: new Date(),

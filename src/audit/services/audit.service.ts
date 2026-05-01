@@ -140,6 +140,7 @@ export class AuditService {
     statusCode: number,
     errorMessage?: string,
     duration_ms?: number,
+    errorObject?: any,
   ): Promise<AuditLog> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -157,6 +158,31 @@ export class AuditService {
         ? AuditStatus.FINISHED_WITH_ERROR
         : AuditStatus.FINISHED;
 
+      // Stringify the error object if present
+      let errorJson: Record<string, any> | null = null;
+      if (errorObject && isError) {
+        try {
+          errorJson = JSON.parse(JSON.stringify(errorObject, (key, value) => {
+            // Handle circular references and special types
+            if (value instanceof Error) {
+              return {
+                message: value.message,
+                name: value.name,
+                stack: value.stack,
+              };
+            }
+            return value;
+          }));
+        } catch (e) {
+          // If stringify fails, try to capture what we can
+          errorJson = {
+            message: errorMessage,
+            type: typeof errorObject,
+            stringified: String(errorObject),
+          };
+        }
+      }
+
       // Create a new log entry with the end status
       return await this.auditLogRepository.create({
         user_id: startedLog.user_id,
@@ -171,6 +197,7 @@ export class AuditService {
         endpoint: startedLog.endpoint,
         status_code: statusCode,
         error_message: errorMessage || null,
+        error_json: errorJson,
         duration_ms: Math.round(duration_ms || 0),
         metadata: {
           ...startedLog.metadata,

@@ -53,6 +53,9 @@ export class AuditLog {
   error_message: string;
 
   @Column({ nullable: true, type: 'json' })
+  error_json: Record<string, any>;
+
+  @Column({ nullable: true, type: 'json' })
   metadata: Record<string, any>;
 
   @Column({ nullable: true, type: 'bigint' })
