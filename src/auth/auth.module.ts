@@ -27,4 +27,4 @@ import { User } from '../users/entities/user.entity';
   providers: [AuthService, LocalStrategy, JwtStrategy],
   exports: [AuthService],
 })
-export class AuthModule { }
+export class AuthModule {}

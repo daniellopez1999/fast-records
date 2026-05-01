@@ -33,4 +33,3 @@ export class UpdateGroupMessageDto {
   @MaxLength(5000)
   content?: string;
 }
-

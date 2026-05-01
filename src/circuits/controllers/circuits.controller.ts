@@ -3,5 +3,5 @@ import { CircuitsService } from '../services/circuits.service';
 
 @Controller('circuits')
 export class CircuitsController {
-  constructor(private readonly circuitsService: CircuitsService) { }
+  constructor(private readonly circuitsService: CircuitsService) {}
 }

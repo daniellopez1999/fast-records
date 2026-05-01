@@ -1,7 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from '../../src/auth/controller/auth.controller';
 import { AuthService } from '../../src/auth/services/auth.service';
-import { Result, RegisterResponse } from '../../src/common/interfaces/interfaces';
+import {
+  Result,
+  RegisterResponse,
+} from '../../src/common/interfaces/interfaces';
 
 describe('AuthController', () => {
   let authController: AuthController;

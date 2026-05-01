@@ -11,5 +11,4 @@ import { RecordsRepository } from './repositories/records.repository';
   providers: [RecordsService, RecordsRepository],
   exports: [RecordsService],
 })
-export class RecordsModule { }
-
+export class RecordsModule {}

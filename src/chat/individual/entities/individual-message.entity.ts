@@ -38,4 +38,3 @@ export class IndividualMessage {
   @JoinColumn({ name: 'user_id' })
   user: User;
 }
-

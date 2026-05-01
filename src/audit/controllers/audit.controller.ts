@@ -3,7 +3,7 @@ import { AuditService } from '../services/audit.service';
 
 @Controller('audit')
 export class AuditController {
-  constructor(private readonly auditService: AuditService) { }
+  constructor(private readonly auditService: AuditService) {}
 
   /**
    * Gets the audit logs for a specific user

@@ -56,4 +56,3 @@ export class Event {
   @JoinColumn({ name: 'creator_id' })
   creator: User;
 }
-

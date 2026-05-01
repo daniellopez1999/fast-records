@@ -3,5 +3,5 @@ import { RecordsService } from '../services/records.service';
 
 @Controller('records')
 export class RecordsController {
-  constructor(private readonly recordsService: RecordsService) { }
+  constructor(private readonly recordsService: RecordsService) {}
 }

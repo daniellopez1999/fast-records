@@ -1,9 +1,4 @@
-import {
-  IsString,
-  IsUUID,
-  IsNumber,
-  Min,
-} from 'class-validator';
+import { IsString, IsUUID, IsNumber, Min } from 'class-validator';
 
 export class CreateRecordDto {
   @IsUUID()
@@ -16,4 +11,3 @@ export class CreateRecordDto {
   @Min(1)
   num_laps: number;
 }
-

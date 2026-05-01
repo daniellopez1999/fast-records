@@ -3,5 +3,5 @@ import { IndividualService } from '../services/individual.service';
 
 @Controller('chat/individual')
 export class IndividualController {
-  constructor(private readonly individualService: IndividualService) { }
+  constructor(private readonly individualService: IndividualService) {}
 }

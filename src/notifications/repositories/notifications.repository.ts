@@ -8,5 +8,5 @@ export class NotificationsRepository {
   constructor(
     @InjectRepository(Notification)
     private readonly repository: Repository<Notification>,
-  ) { }
+  ) {}
 }

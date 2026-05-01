@@ -10,8 +10,11 @@ import { IndividualChatsRepository } from './repositories/individual-message.rep
 @Module({
   imports: [TypeOrmModule.forFeature([IndividualChat, IndividualMessage])],
   controllers: [IndividualController],
-  providers: [IndividualService, IndividualMessagesRepository, IndividualChatsRepository],
+  providers: [
+    IndividualService,
+    IndividualMessagesRepository,
+    IndividualChatsRepository,
+  ],
   exports: [IndividualService],
 })
-export class IndividualModule { }
-
+export class IndividualModule {}

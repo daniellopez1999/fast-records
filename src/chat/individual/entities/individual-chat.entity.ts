@@ -34,4 +34,3 @@ export class IndividualChat {
   @JoinColumn({ name: 'user_2_id' })
   user_2: User;
 }
-

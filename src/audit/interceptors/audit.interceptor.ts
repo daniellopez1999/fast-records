@@ -17,7 +17,7 @@ export class AuditInterceptor implements NestInterceptor {
   constructor(
     private readonly auditService: AuditService,
     private readonly reflector: Reflector,
-  ) { }
+  ) {}
 
   /**
    * Checks if the data object is a Result type

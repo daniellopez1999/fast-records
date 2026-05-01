@@ -11,5 +11,4 @@ import { NotificationsRepository } from './repositories/notifications.repository
   providers: [NotificationsService, NotificationsRepository],
   exports: [NotificationsService],
 })
-export class NotificationsModule { }
-
+export class NotificationsModule {}

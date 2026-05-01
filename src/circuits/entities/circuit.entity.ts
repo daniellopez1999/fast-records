@@ -46,4 +46,3 @@ export class Circuit {
   @CreateDateColumn()
   created_at: Date;
 }
-

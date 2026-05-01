@@ -7,8 +7,8 @@ import { User, UserType } from '../../src/users/entities/user.entity';
 describe('UsersService', () => {
   let usersService: UsersService;
   let usersRepository: UsersRepository;
-  let dataSource: DataSource;
   let queryRunner: QueryRunner;
+  let dataSource: DataSource;
 
   beforeEach(async () => {
     const mockQueryRunner = {
@@ -82,6 +82,7 @@ describe('UsersService', () => {
       expect(result).toEqual({
         user_id: newUser.user_id,
         email: newUser.email,
+        password: newUser.password,
         first_name: newUser.first_name,
         last_name: newUser.last_name,
         user_type: newUser.user_type,
@@ -89,9 +90,17 @@ describe('UsersService', () => {
         description: newUser.description,
         last_access: newUser.last_access,
         active: newUser.active,
+        created_at: newUser.created_at,
+        updated_at: newUser.updated_at,
       });
-      expect(usersRepository.findByEmail).toHaveBeenCalledWith(queryRunner, userData);
-      expect(usersRepository.create).toHaveBeenCalledWith(queryRunner, userData);
+      expect(usersRepository.findByEmail).toHaveBeenCalledWith(
+        queryRunner,
+        userData,
+      );
+      expect(usersRepository.create).toHaveBeenCalledWith(
+        queryRunner,
+        userData,
+      );
     });
 
     it('should return error if email already exists', async () => {
@@ -122,7 +131,7 @@ describe('UsersService', () => {
         .mockResolvedValue(existingUser);
 
       await expect(usersService.createUser(userData)).rejects.toThrow(
-        'User with this email already exists'
+        'User with this email already exists',
       );
       expect(usersRepository.create).not.toHaveBeenCalled();
     });

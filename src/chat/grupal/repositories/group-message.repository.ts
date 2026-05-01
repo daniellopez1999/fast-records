@@ -9,7 +9,7 @@ export class GroupMessagesRepository {
   constructor(
     @InjectRepository(GroupMessage)
     private readonly repository: Repository<GroupMessage>,
-  ) { }
+  ) {}
 }
 
 @Injectable()
@@ -17,5 +17,5 @@ export class GroupChatsRepository {
   constructor(
     @InjectRepository(GroupChat)
     private readonly repository: Repository<GroupChat>,
-  ) { }
+  ) {}
 }

@@ -38,4 +38,3 @@ export class GroupMessage {
   @JoinColumn({ name: 'user_id' })
   user: User;
 }
-

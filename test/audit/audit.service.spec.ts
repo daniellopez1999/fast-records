@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource, QueryRunner } from 'typeorm';
 import { AuditService } from '../../src/audit/services/audit.service';
 import { AuditLogRepository } from '../../src/audit/repositories/audit-log.repository';
-import { AuditLog, AuditStatus } from '../../src/audit/entities/audit-log.entity';
+import {
+  AuditLog,
+  AuditStatus,
+} from '../../src/audit/entities/audit-log.entity';
 
 describe('AuditService', () => {
   let auditService: AuditService;
@@ -74,7 +77,8 @@ describe('AuditService', () => {
       const req = {
         user: { user_id: 'user-123' },
         headers: {
-          'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'user-agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         },
         method: 'GET',
         originalUrl: '/test',
@@ -83,7 +87,11 @@ describe('AuditService', () => {
 
       (auditLogRepository.create as jest.Mock).mockResolvedValue(mockAuditLog);
 
-      const result = await auditService.logRequestStart(req, 'TestController', 'testMethod');
+      const result = await auditService.logRequestStart(
+        req,
+        'TestController',
+        'testMethod',
+      );
 
       expect(result).toEqual(mockAuditLog);
       expect(auditLogRepository.create).toHaveBeenCalledWith(
@@ -105,7 +113,8 @@ describe('AuditService', () => {
       const req = {
         user: { user_id: 'user-123' },
         headers: {
-          'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148',
+          'user-agent':
+            'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148',
         },
         method: 'POST',
         originalUrl: '/api/users',
@@ -116,7 +125,8 @@ describe('AuditService', () => {
 
       await auditService.logRequestStart(req, 'UsersController', 'create');
 
-      const callArgs = (auditLogRepository.create as jest.Mock).mock.calls[0][0];
+      const callArgs = (auditLogRepository.create as jest.Mock).mock
+        .calls[0][0];
       expect(callArgs.device).toBe('mobile');
       // iOS check should come before macOS check
       expect(callArgs.metadata.os).toBe('iOS');
@@ -164,14 +174,21 @@ describe('AuditService', () => {
 
   describe('logRequestEnd', () => {
     it('should create a finished audit log on success', async () => {
-      (auditLogRepository.findById as jest.Mock).mockResolvedValue(mockAuditLog);
+      (auditLogRepository.findById as jest.Mock).mockResolvedValue(
+        mockAuditLog,
+      );
       (auditLogRepository.create as jest.Mock).mockResolvedValue({
         ...mockAuditLog,
         status: AuditStatus.FINISHED,
         status_code: 200,
       });
 
-      const result = await auditService.logRequestEnd('audit-id-123', 200, undefined, 150);
+      const result = await auditService.logRequestEnd(
+        'audit-id-123',
+        200,
+        undefined,
+        150,
+      );
 
       expect(result.status).toBe(AuditStatus.FINISHED);
       expect(result.status_code).toBe(200);
@@ -188,7 +205,9 @@ describe('AuditService', () => {
     });
 
     it('should create a finished_with_error audit log on error', async () => {
-      (auditLogRepository.findById as jest.Mock).mockResolvedValue(mockAuditLog);
+      (auditLogRepository.findById as jest.Mock).mockResolvedValue(
+        mockAuditLog,
+      );
       (auditLogRepository.create as jest.Mock).mockResolvedValue({
         ...mockAuditLog,
         status: AuditStatus.FINISHED_WITH_ERROR,
@@ -196,7 +215,12 @@ describe('AuditService', () => {
         error_message: 'Internal Server Error',
       });
 
-      const result = await auditService.logRequestEnd('audit-id-123', 500, 'Internal Server Error', 100);
+      const result = await auditService.logRequestEnd(
+        'audit-id-123',
+        500,
+        'Internal Server Error',
+        100,
+      );
 
       expect(result.status).toBe(AuditStatus.FINISHED_WITH_ERROR);
       expect(result.status_code).toBe(500);
@@ -212,7 +236,9 @@ describe('AuditService', () => {
     });
 
     it('should copy all data from started log to finished log', async () => {
-      (auditLogRepository.findById as jest.Mock).mockResolvedValue(mockAuditLog);
+      (auditLogRepository.findById as jest.Mock).mockResolvedValue(
+        mockAuditLog,
+      );
       (auditLogRepository.create as jest.Mock).mockResolvedValue({
         ...mockAuditLog,
         status: AuditStatus.FINISHED,
@@ -234,7 +260,9 @@ describe('AuditService', () => {
     });
 
     it('should include started_log_id in metadata', async () => {
-      (auditLogRepository.findById as jest.Mock).mockResolvedValue(mockAuditLog);
+      (auditLogRepository.findById as jest.Mock).mockResolvedValue(
+        mockAuditLog,
+      );
       (auditLogRepository.create as jest.Mock).mockResolvedValue({
         ...mockAuditLog,
         status: AuditStatus.FINISHED,
@@ -256,12 +284,18 @@ describe('AuditService', () => {
   describe('getUserAuditLogs', () => {
     it('should return audit logs for a specific user', async () => {
       const mockLogs: AuditLog[] = [mockAuditLog];
-      (auditLogRepository.findByUserId as jest.Mock).mockResolvedValue(mockLogs);
+      (auditLogRepository.findByUserId as jest.Mock).mockResolvedValue(
+        mockLogs,
+      );
 
       const result = await auditService.getUserAuditLogs('user-123', 50);
 
       expect(result).toEqual(mockLogs);
-      expect(auditLogRepository.findByUserId).toHaveBeenCalledWith('user-123', mockQueryRunner, 50);
+      expect(auditLogRepository.findByUserId).toHaveBeenCalledWith(
+        'user-123',
+        mockQueryRunner,
+        50,
+      );
       expect(mockQueryRunner.connect).toHaveBeenCalled();
       expect(mockQueryRunner.release).toHaveBeenCalled();
     });
@@ -271,7 +305,11 @@ describe('AuditService', () => {
 
       await auditService.getUserAuditLogs('user-123');
 
-      expect(auditLogRepository.findByUserId).toHaveBeenCalledWith('user-123', mockQueryRunner, undefined);
+      expect(auditLogRepository.findByUserId).toHaveBeenCalledWith(
+        'user-123',
+        mockQueryRunner,
+        undefined,
+      );
     });
 
     it('should return empty array if no logs found', async () => {
@@ -286,12 +324,18 @@ describe('AuditService', () => {
   describe('getEndpointAuditLogs', () => {
     it('should return audit logs for a specific endpoint', async () => {
       const mockLogs: AuditLog[] = [mockAuditLog];
-      (auditLogRepository.findByEndpoint as jest.Mock).mockResolvedValue(mockLogs);
+      (auditLogRepository.findByEndpoint as jest.Mock).mockResolvedValue(
+        mockLogs,
+      );
 
       const result = await auditService.getEndpointAuditLogs('/test', 100);
 
       expect(result).toEqual(mockLogs);
-      expect(auditLogRepository.findByEndpoint).toHaveBeenCalledWith('/test', mockQueryRunner, 100);
+      expect(auditLogRepository.findByEndpoint).toHaveBeenCalledWith(
+        '/test',
+        mockQueryRunner,
+        100,
+      );
       expect(mockQueryRunner.connect).toHaveBeenCalled();
       expect(mockQueryRunner.release).toHaveBeenCalled();
     });
@@ -301,7 +345,11 @@ describe('AuditService', () => {
 
       await auditService.getEndpointAuditLogs('/api/users/123/profile');
 
-      expect(auditLogRepository.findByEndpoint).toHaveBeenCalledWith('/api/users/123/profile', mockQueryRunner, undefined);
+      expect(auditLogRepository.findByEndpoint).toHaveBeenCalledWith(
+        '/api/users/123/profile',
+        mockQueryRunner,
+        undefined,
+      );
     });
   });
 
@@ -310,7 +358,8 @@ describe('AuditService', () => {
       const req = {
         user: { user_id: 'user-123' },
         headers: {
-          'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+          'user-agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
         },
         method: 'GET',
         originalUrl: '/test',
@@ -335,7 +384,8 @@ describe('AuditService', () => {
       const req = {
         user: { user_id: 'user-123' },
         headers: {
-          'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Safari/605.1.15',
+          'user-agent':
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Safari/605.1.15',
         },
         method: 'GET',
         originalUrl: '/test',
@@ -346,7 +396,8 @@ describe('AuditService', () => {
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
-      const callArgs = (auditLogRepository.create as jest.Mock).mock.calls[0][0];
+      const callArgs = (auditLogRepository.create as jest.Mock).mock
+        .calls[0][0];
       expect(callArgs.metadata.browser).toBe('Safari');
       // Should still have version 'unknown' if Version/ pattern not found
       expect(callArgs.version).toBeDefined();
@@ -356,7 +407,8 @@ describe('AuditService', () => {
       const req = {
         user: { user_id: 'user-123' },
         headers: {
-          'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 KHTML like Gecko Version/4.0 Edg/120.0.0.0',
+          'user-agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 KHTML like Gecko Version/4.0 Edg/120.0.0.0',
         },
         method: 'GET',
         originalUrl: '/test',
@@ -367,7 +419,8 @@ describe('AuditService', () => {
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
-      const callArgs = (auditLogRepository.create as jest.Mock).mock.calls[0][0];
+      const callArgs = (auditLogRepository.create as jest.Mock).mock
+        .calls[0][0];
       expect(callArgs.metadata.browser).toBe('Edge');
     });
 
@@ -375,7 +428,8 @@ describe('AuditService', () => {
       const req = {
         user: { user_id: 'user-123' },
         headers: {
-          'user-agent': 'Mozilla/5.0 (Linux; Android 12; SM-G991B) AppleWebKit/537.36',
+          'user-agent':
+            'Mozilla/5.0 (Linux; Android 12; SM-G991B) AppleWebKit/537.36',
         },
         method: 'GET',
         originalUrl: '/test',
@@ -386,7 +440,8 @@ describe('AuditService', () => {
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
-      const callArgs = (auditLogRepository.create as jest.Mock).mock.calls[0][0];
+      const callArgs = (auditLogRepository.create as jest.Mock).mock
+        .calls[0][0];
       expect(callArgs.metadata.os).toBe('Android');
     });
 
@@ -405,7 +460,8 @@ describe('AuditService', () => {
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
-      const callArgs = (auditLogRepository.create as jest.Mock).mock.calls[0][0];
+      const callArgs = (auditLogRepository.create as jest.Mock).mock
+        .calls[0][0];
       expect(callArgs.metadata.os).toBe('Linux');
     });
 
@@ -424,7 +480,8 @@ describe('AuditService', () => {
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
-      const callArgs = (auditLogRepository.create as jest.Mock).mock.calls[0][0];
+      const callArgs = (auditLogRepository.create as jest.Mock).mock
+        .calls[0][0];
       expect(callArgs.metadata.browser).toBe('unknown');
       expect(callArgs.metadata.os).toBe('unknown');
     });
@@ -433,7 +490,8 @@ describe('AuditService', () => {
       const req = {
         user: { user_id: 'user-123' },
         headers: {
-          'user-agent': 'Mozilla/5.0 (iPad; CPU OS 14_6 like Mac OS X) AppleWebKit/605.1.15',
+          'user-agent':
+            'Mozilla/5.0 (iPad; CPU OS 14_6 like Mac OS X) AppleWebKit/605.1.15',
         },
         method: 'GET',
         originalUrl: '/test',
@@ -456,7 +514,8 @@ describe('AuditService', () => {
       const req = {
         user: { user_id: 'user-123' },
         headers: {
-          'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'user-agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         },
         method: 'GET',
         originalUrl: '/test',
@@ -467,7 +526,8 @@ describe('AuditService', () => {
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
-      const callArgs = (auditLogRepository.create as jest.Mock).mock.calls[0][0];
+      const callArgs = (auditLogRepository.create as jest.Mock).mock
+        .calls[0][0];
       expect(callArgs.metadata.browser).toBe('Chrome');
       expect(callArgs.version).toBe('120.0.0.0');
     });
@@ -476,7 +536,8 @@ describe('AuditService', () => {
       const req = {
         user: { user_id: 'user-123' },
         headers: {
-          'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+          'user-agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
         },
         method: 'GET',
         originalUrl: '/test',
@@ -487,7 +548,8 @@ describe('AuditService', () => {
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
-      const callArgs = (auditLogRepository.create as jest.Mock).mock.calls[0][0];
+      const callArgs = (auditLogRepository.create as jest.Mock).mock
+        .calls[0][0];
       expect(callArgs.metadata.browser).toBe('Firefox');
       expect(callArgs.version).toBe('121.0');
     });
@@ -496,7 +558,8 @@ describe('AuditService', () => {
       const req = {
         user: { user_id: 'user-123' },
         headers: {
-          'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15',
+          'user-agent':
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15',
         },
         method: 'GET',
         originalUrl: '/test',
@@ -507,7 +570,8 @@ describe('AuditService', () => {
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
-      const callArgs = (auditLogRepository.create as jest.Mock).mock.calls[0][0];
+      const callArgs = (auditLogRepository.create as jest.Mock).mock
+        .calls[0][0];
       expect(callArgs.metadata.browser).toBe('Safari');
       expect(callArgs.version).toBe('17.1');
     });
@@ -516,7 +580,8 @@ describe('AuditService', () => {
       const req = {
         user: { user_id: 'user-123' },
         headers: {
-          'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 KHTML like Gecko Version/4.0 Edg/120.0.0.0',
+          'user-agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 KHTML like Gecko Version/4.0 Edg/120.0.0.0',
         },
         method: 'GET',
         originalUrl: '/test',
@@ -527,7 +592,8 @@ describe('AuditService', () => {
 
       await auditService.logRequestStart(req, 'TestController', 'testMethod');
 
-      const callArgs = (auditLogRepository.create as jest.Mock).mock.calls[0][0];
+      const callArgs = (auditLogRepository.create as jest.Mock).mock
+        .calls[0][0];
       expect(callArgs.metadata.browser).toBe('Edge');
       expect(callArgs.version).toBe('120.0.0.0');
     });

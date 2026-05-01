@@ -45,4 +45,3 @@ export class Notification {
   @JoinColumn({ name: 'from_user_id' })
   from_user: User;
 }
-

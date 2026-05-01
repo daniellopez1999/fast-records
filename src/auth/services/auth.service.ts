@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,7 +19,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) { }
+  ) {}
 
   /**
    * Validates user credentials
@@ -29,6 +33,7 @@ export class AuthService {
     });
 
     if (user && (await bcrypt.compare(password, user.password))) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...result } = user;
       return result;
     }
@@ -76,10 +81,17 @@ export class AuthService {
       const user = await this.usersService.createUser(userWithHashedPassword);
 
       const token = await this.generateToken(user);
-      return ResponseBuilder.success('User registered successfully', { access_token: token.access_token, user }, 201);
+      return ResponseBuilder.success(
+        'User registered successfully',
+        { access_token: token.access_token, user },
+        201,
+      );
     } catch (error) {
       if (error instanceof ConflictException) {
-        return ResponseBuilder.failed('User with this email already exists', 409);
+        return ResponseBuilder.failed(
+          'User with this email already exists',
+          409,
+        );
       }
       throw new InternalServerErrorException('Registration failed: ' + error);
     }

@@ -9,7 +9,7 @@ export class IndividualMessagesRepository {
   constructor(
     @InjectRepository(IndividualMessage)
     private readonly repository: Repository<IndividualMessage>,
-  ) { }
+  ) {}
 }
 
 @Injectable()
@@ -17,5 +17,5 @@ export class IndividualChatsRepository {
   constructor(
     @InjectRepository(IndividualChat)
     private readonly repository: Repository<IndividualChat>,
-  ) { }
+  ) {}
 }

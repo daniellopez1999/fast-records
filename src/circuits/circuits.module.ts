@@ -13,5 +13,4 @@ import { CircuitPhotoRepository } from './repositories/circuit-photo.repository'
   providers: [CircuitsService, CircuitsRepository, CircuitPhotoRepository],
   exports: [CircuitsService],
 })
-export class CircuitsModule { }
-
+export class CircuitsModule {}

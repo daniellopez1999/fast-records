@@ -12,8 +12,12 @@ import { EventPhotoRepository } from './repositories/event-photo.repository';
 @Module({
   imports: [TypeOrmModule.forFeature([Event, ParticipantEvent, EventPhoto])],
   controllers: [EventsController],
-  providers: [EventsService, EventsRepository, ParticipantEventRepository, EventPhotoRepository],
+  providers: [
+    EventsService,
+    EventsRepository,
+    ParticipantEventRepository,
+    EventPhotoRepository,
+  ],
   exports: [EventsService],
 })
-export class EventsModule { }
-
+export class EventsModule {}

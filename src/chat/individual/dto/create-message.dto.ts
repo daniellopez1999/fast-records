@@ -28,4 +28,3 @@ export class UpdateIndividualMessageDto {
   @MaxLength(5000)
   content?: string;
 }
-

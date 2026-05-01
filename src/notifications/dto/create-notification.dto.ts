@@ -27,4 +27,3 @@ export class CreateNotificationDto {
   @IsUUID()
   reference_id?: string;
 }
-

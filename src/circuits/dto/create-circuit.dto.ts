@@ -6,7 +6,6 @@ import {
   MaxLength,
   Min,
   Max,
-  IsDecimal,
 } from 'class-validator';
 
 export class CreateCircuitDto {
@@ -94,4 +93,3 @@ export class UpdateCircuitDto {
   @Min(0.1)
   track_length_km?: number;
 }
-

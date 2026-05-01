@@ -8,5 +8,5 @@ export class RecordsRepository {
   constructor(
     @InjectRepository(Record)
     private readonly repository: Repository<Record>,
-  ) { }
+  ) {}
 }

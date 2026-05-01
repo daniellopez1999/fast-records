@@ -32,7 +32,9 @@ export class AuditService {
       };
 
       // Detect device type
-      if (/mobile|android|iphone|ipod|blackberry|windows phone/i.test(userAgent)) {
+      if (
+        /mobile|android|iphone|ipod|blackberry|windows phone/i.test(userAgent)
+      ) {
         result.device = 'mobile';
       } else if (/tablet|ipad/i.test(userAgent)) {
         result.device = 'tablet';
@@ -47,7 +49,11 @@ export class AuditService {
         result.browser = 'Firefox';
         const match = userAgent.match(/Firefox\/([0-9.]+)/);
         if (match) result.version = match[1];
-      } else if (/safari/i.test(userAgent) && !/chrome/i.test(userAgent) && !/edg/i.test(userAgent)) {
+      } else if (
+        /safari/i.test(userAgent) &&
+        !/chrome/i.test(userAgent) &&
+        !/edg/i.test(userAgent)
+      ) {
         result.browser = 'Safari';
         const match = userAgent.match(/Version\/([0-9.]+)/);
         if (match) result.version = match[1];
@@ -71,7 +77,7 @@ export class AuditService {
       }
 
       return result;
-    } catch (error) {
+    } catch {
       return {};
     }
   }
@@ -109,22 +115,25 @@ export class AuditService {
       const userAgent = req.headers?.['user-agent'] || '';
       const parsed = this.parseUserAgent(userAgent);
 
-      const auditLog = await this.auditLogRepository.create({
-        user_id: this.getUserId(req),
-        controller,
-        method,
-        status: AuditStatus.STARTED,
-        ip_address: this.getClientIp(req),
-        user_agent: userAgent,
-        device: parsed.device,
-        version: parsed.version,
-        http_method: req.method,
-        endpoint: req.originalUrl || req.url,
-        metadata: {
-          browser: parsed.browser,
-          os: parsed.os,
+      const auditLog = await this.auditLogRepository.create(
+        {
+          user_id: this.getUserId(req),
+          controller,
+          method,
+          status: AuditStatus.STARTED,
+          ip_address: this.getClientIp(req),
+          user_agent: userAgent,
+          device: parsed.device,
+          version: parsed.version,
+          http_method: req.method,
+          endpoint: req.originalUrl || req.url,
+          metadata: {
+            browser: parsed.browser,
+            os: parsed.os,
+          },
         },
-      }, queryRunner);
+        queryRunner,
+      );
 
       return auditLog;
     } finally {
@@ -147,7 +156,10 @@ export class AuditService {
 
     try {
       // Get the started log to copy its information
-      const startedLog = await this.auditLogRepository.findById(auditLogId, queryRunner);
+      const startedLog = await this.auditLogRepository.findById(
+        auditLogId,
+        queryRunner,
+      );
 
       if (!startedLog) {
         throw new Error(`Audit log with ID ${auditLogId} not found`);
@@ -162,18 +174,20 @@ export class AuditService {
       let errorJson: Record<string, any> | null = null;
       if (errorObject && isError) {
         try {
-          errorJson = JSON.parse(JSON.stringify(errorObject, (key, value) => {
-            // Handle circular references and special types
-            if (value instanceof Error) {
-              return {
-                message: value.message,
-                name: value.name,
-                stack: value.stack,
-              };
-            }
-            return value;
-          }));
-        } catch (e) {
+          errorJson = JSON.parse(
+            JSON.stringify(errorObject, (key, value) => {
+              // Handle circular references and special types
+              if (value instanceof Error) {
+                return {
+                  message: value.message,
+                  name: value.name,
+                  stack: value.stack,
+                };
+              }
+              return value;
+            }),
+          );
+        } catch {
           // If stringify fails, try to capture what we can
           errorJson = {
             message: errorMessage,
@@ -184,27 +198,30 @@ export class AuditService {
       }
 
       // Create a new log entry with the end status
-      return await this.auditLogRepository.create({
-        user_id: startedLog.user_id,
-        controller: startedLog.controller,
-        method: startedLog.method,
-        status,
-        ip_address: startedLog.ip_address,
-        user_agent: startedLog.user_agent,
-        device: startedLog.device,
-        version: startedLog.version,
-        http_method: startedLog.http_method,
-        endpoint: startedLog.endpoint,
-        status_code: statusCode,
-        error_message: errorMessage || null,
-        error_json: errorJson,
-        duration_ms: Math.round(duration_ms || 0),
-        metadata: {
-          ...startedLog.metadata,
-          started_log_id: auditLogId,
+      return await this.auditLogRepository.create(
+        {
+          user_id: startedLog.user_id,
+          controller: startedLog.controller,
+          method: startedLog.method,
+          status,
+          ip_address: startedLog.ip_address,
+          user_agent: startedLog.user_agent,
+          device: startedLog.device,
+          version: startedLog.version,
+          http_method: startedLog.http_method,
+          endpoint: startedLog.endpoint,
+          status_code: statusCode,
+          error_message: errorMessage || null,
+          error_json: errorJson,
+          duration_ms: Math.round(duration_ms || 0),
+          metadata: {
+            ...startedLog.metadata,
+            started_log_id: auditLogId,
+          },
+          finished_at: new Date(),
         },
-        finished_at: new Date(),
-      }, queryRunner);
+        queryRunner,
+      );
     } finally {
       await queryRunner.release();
     }
@@ -218,7 +235,11 @@ export class AuditService {
     await queryRunner.connect();
 
     try {
-      return await this.auditLogRepository.findByUserId(user_id, queryRunner, limit);
+      return await this.auditLogRepository.findByUserId(
+        user_id,
+        queryRunner,
+        limit,
+      );
     } finally {
       await queryRunner.release();
     }
@@ -235,7 +256,11 @@ export class AuditService {
     await queryRunner.connect();
 
     try {
-      return await this.auditLogRepository.findByEndpoint(endpoint, queryRunner, limit);
+      return await this.auditLogRepository.findByEndpoint(
+        endpoint,
+        queryRunner,
+        limit,
+      );
     } finally {
       await queryRunner.release();
     }

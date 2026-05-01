@@ -1,7 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuditController } from '../../src/audit/controllers/audit.controller';
 import { AuditService } from '../../src/audit/services/audit.service';
-import { AuditLog, AuditStatus } from '../../src/audit/entities/audit-log.entity';
+import {
+  AuditLog,
+  AuditStatus,
+} from '../../src/audit/entities/audit-log.entity';
 
 describe('AuditController', () => {
   let auditController: AuditController;
@@ -70,7 +73,9 @@ describe('AuditController', () => {
 
   describe('getUserAuditLogs', () => {
     it('should return user audit logs', async () => {
-      jest.spyOn(auditService, 'getUserAuditLogs').mockResolvedValue(mockAuditLogs);
+      jest
+        .spyOn(auditService, 'getUserAuditLogs')
+        .mockResolvedValue(mockAuditLogs);
 
       const result = await auditController.getUserAuditLogs('user-123');
 
@@ -79,23 +84,36 @@ describe('AuditController', () => {
         data: mockAuditLogs,
         count: mockAuditLogs.length,
       });
-      expect(auditService.getUserAuditLogs).toHaveBeenCalledWith('user-123', undefined);
+      expect(auditService.getUserAuditLogs).toHaveBeenCalledWith(
+        'user-123',
+        undefined,
+      );
     });
 
     it('should parse limit parameter correctly', async () => {
-      jest.spyOn(auditService, 'getUserAuditLogs').mockResolvedValue(mockAuditLogs);
+      jest
+        .spyOn(auditService, 'getUserAuditLogs')
+        .mockResolvedValue(mockAuditLogs);
 
       await auditController.getUserAuditLogs('user-123', '100');
 
-      expect(auditService.getUserAuditLogs).toHaveBeenCalledWith('user-123', 100);
+      expect(auditService.getUserAuditLogs).toHaveBeenCalledWith(
+        'user-123',
+        100,
+      );
     });
 
     it('should handle missing limit parameter', async () => {
-      jest.spyOn(auditService, 'getUserAuditLogs').mockResolvedValue(mockAuditLogs);
+      jest
+        .spyOn(auditService, 'getUserAuditLogs')
+        .mockResolvedValue(mockAuditLogs);
 
       await auditController.getUserAuditLogs('user-123');
 
-      expect(auditService.getUserAuditLogs).toHaveBeenCalledWith('user-123', undefined);
+      expect(auditService.getUserAuditLogs).toHaveBeenCalledWith(
+        'user-123',
+        undefined,
+      );
     });
 
     it('should return empty logs array', async () => {
@@ -109,7 +127,9 @@ describe('AuditController', () => {
     });
 
     it('should include correct count in response', async () => {
-      jest.spyOn(auditService, 'getUserAuditLogs').mockResolvedValue(mockAuditLogs);
+      jest
+        .spyOn(auditService, 'getUserAuditLogs')
+        .mockResolvedValue(mockAuditLogs);
 
       const result = await auditController.getUserAuditLogs('user-123');
 
@@ -119,7 +139,9 @@ describe('AuditController', () => {
 
   describe('getEndpointAuditLogs', () => {
     it('should return endpoint audit logs', async () => {
-      jest.spyOn(auditService, 'getEndpointAuditLogs').mockResolvedValue(mockAuditLogs);
+      jest
+        .spyOn(auditService, 'getEndpointAuditLogs')
+        .mockResolvedValue(mockAuditLogs);
 
       const result = await auditController.getEndpointAuditLogs('/test');
 
@@ -128,15 +150,23 @@ describe('AuditController', () => {
         data: mockAuditLogs,
         count: mockAuditLogs.length,
       });
-      expect(auditService.getEndpointAuditLogs).toHaveBeenCalledWith('/test', undefined);
+      expect(auditService.getEndpointAuditLogs).toHaveBeenCalledWith(
+        '/test',
+        undefined,
+      );
     });
 
     it('should parse limit parameter correctly', async () => {
-      jest.spyOn(auditService, 'getEndpointAuditLogs').mockResolvedValue(mockAuditLogs);
+      jest
+        .spyOn(auditService, 'getEndpointAuditLogs')
+        .mockResolvedValue(mockAuditLogs);
 
       await auditController.getEndpointAuditLogs('/test', '50');
 
-      expect(auditService.getEndpointAuditLogs).toHaveBeenCalledWith('/test', 50);
+      expect(auditService.getEndpointAuditLogs).toHaveBeenCalledWith(
+        '/test',
+        50,
+      );
     });
 
     it('should handle complex endpoint paths', async () => {
@@ -153,7 +183,8 @@ describe('AuditController', () => {
     it('should return empty logs array for non-existent endpoint', async () => {
       jest.spyOn(auditService, 'getEndpointAuditLogs').mockResolvedValue([]);
 
-      const result = await auditController.getEndpointAuditLogs('/non-existent');
+      const result =
+        await auditController.getEndpointAuditLogs('/non-existent');
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual([]);
@@ -197,7 +228,10 @@ describe('AuditController', () => {
 
       await auditController.getUserAuditLogs('user-123', '999');
 
-      expect(auditService.getUserAuditLogs).toHaveBeenCalledWith('user-123', 999);
+      expect(auditService.getUserAuditLogs).toHaveBeenCalledWith(
+        'user-123',
+        999,
+      );
     });
 
     it('should handle zero as limit', async () => {
@@ -214,7 +248,10 @@ describe('AuditController', () => {
       await auditController.getUserAuditLogs('user-123', 'invalid');
 
       // parseInt('invalid', 10) returns NaN
-      expect(auditService.getUserAuditLogs).toHaveBeenCalledWith('user-123', NaN);
+      expect(auditService.getUserAuditLogs).toHaveBeenCalledWith(
+        'user-123',
+        NaN,
+      );
     });
   });
 });

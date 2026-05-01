@@ -6,4 +6,4 @@ import { GrupalModule } from './grupal/grupal.module';
   imports: [IndividualModule, GrupalModule],
   exports: [IndividualModule, GrupalModule],
 })
-export class ChatModule { }
+export class ChatModule {}

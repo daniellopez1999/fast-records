@@ -17,7 +17,7 @@ export class AuditPublicInterceptor implements NestInterceptor {
   constructor(
     private readonly auditService: AuditService,
     private readonly reflector: Reflector,
-  ) { }
+  ) {}
 
   /**
    * Checks if the data object is a Result type
@@ -41,10 +41,10 @@ export class AuditPublicInterceptor implements NestInterceptor {
     next: CallHandler,
   ): Promise<Observable<any>> {
     // Check if method has @AuditPublic() decorator
-    const shouldAuditPublic = this.reflector.getAllAndOverride<boolean>(AUDIT_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const shouldAuditPublic = this.reflector.getAllAndOverride<boolean>(
+      AUDIT_PUBLIC_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     // If no decorator, continue without auditing
     if (!shouldAuditPublic) {

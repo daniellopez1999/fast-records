@@ -69,4 +69,3 @@ export class UpdateEventDto {
   @MaxLength(500)
   description?: string;
 }
-

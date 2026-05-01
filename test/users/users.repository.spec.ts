@@ -63,12 +63,8 @@ describe('UsersRepository', () => {
         updated_at: new Date(),
       };
 
-      jest
-        .spyOn(repository, 'create')
-        .mockReturnValue(newUser);
-      jest
-        .spyOn(queryRunner.manager, 'save')
-        .mockResolvedValue(newUser);
+      jest.spyOn(repository, 'create').mockReturnValue(newUser);
+      jest.spyOn(queryRunner.manager, 'save').mockResolvedValue(newUser);
 
       const result = await usersRepository.create(queryRunner, userData);
 
@@ -85,16 +81,14 @@ describe('UsersRepository', () => {
         last_name: 'User',
       };
 
-      jest
-        .spyOn(repository, 'create')
-        .mockReturnValue(userData as User);
+      jest.spyOn(repository, 'create').mockReturnValue(userData as User);
       jest
         .spyOn(queryRunner.manager, 'save')
         .mockRejectedValue(new Error('Database error'));
 
-      await expect(usersRepository.create(queryRunner, userData)).rejects.toThrow(
-        'Database error',
-      );
+      await expect(
+        usersRepository.create(queryRunner, userData),
+      ).rejects.toThrow('Database error');
     });
   });
 
@@ -134,9 +128,7 @@ describe('UsersRepository', () => {
       const email = 'nonexistent@example.com';
       const userData: Partial<User> = { email };
 
-      jest
-        .spyOn(queryRunner.manager, 'findOne')
-        .mockResolvedValue(null);
+      jest.spyOn(queryRunner.manager, 'findOne').mockResolvedValue(null);
 
       const result = await usersRepository.findByEmail(queryRunner, userData);
 
@@ -150,9 +142,7 @@ describe('UsersRepository', () => {
       const email = 'test@example.com';
       const userData: Partial<User> = { email, first_name: 'Test' };
 
-      jest
-        .spyOn(queryRunner.manager, 'findOne')
-        .mockResolvedValue(null);
+      jest.spyOn(queryRunner.manager, 'findOne').mockResolvedValue(null);
 
       await usersRepository.findByEmail(queryRunner, userData);
 

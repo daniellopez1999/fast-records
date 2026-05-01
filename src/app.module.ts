@@ -33,9 +33,7 @@ import { ConfigService } from '@nestjs/config';
         username: configService.get<string>('DB_USER'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [
-          __dirname + '/**/*.entity.js',
-        ],
+        entities: [__dirname + '/**/*.entity.js'],
         synchronize: true,
       }),
       inject: [ConfigService],
@@ -68,5 +66,4 @@ import { ConfigService } from '@nestjs/config';
     },
   ],
 })
-export class AppModule { }
-
+export class AppModule {}

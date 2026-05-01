@@ -8,5 +8,5 @@ export class CircuitsRepository {
   constructor(
     @InjectRepository(Circuit)
     private readonly repository: Repository<Circuit>,
-  ) { }
+  ) {}
 }

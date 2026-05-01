@@ -4,7 +4,10 @@ import { AuditService } from '../../src/audit/services/audit.service';
 import { ExecutionContext, CallHandler } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable, of, throwError } from 'rxjs';
-import { AuditLog, AuditStatus } from '../../src/audit/entities/audit-log.entity';
+import {
+  AuditLog,
+  AuditStatus,
+} from '../../src/audit/entities/audit-log.entity';
 
 describe('AuditInterceptor', () => {
   let auditInterceptor: AuditInterceptor;
@@ -72,7 +75,9 @@ describe('AuditInterceptor', () => {
         getClass: () => ({ name: 'TestController' }),
       } as unknown as ExecutionContext;
 
-      jest.spyOn(auditService, 'logRequestStart').mockResolvedValue(mockAuditLog);
+      jest
+        .spyOn(auditService, 'logRequestStart')
+        .mockResolvedValue(mockAuditLog);
       jest.spyOn(auditService, 'logRequestEnd').mockResolvedValue({
         ...mockAuditLog,
         status: AuditStatus.FINISHED,
@@ -117,7 +122,9 @@ describe('AuditInterceptor', () => {
         getClass: () => ({ name: 'TestController' }),
       } as unknown as ExecutionContext;
 
-      jest.spyOn(auditService, 'logRequestStart').mockResolvedValue(mockAuditLog);
+      jest
+        .spyOn(auditService, 'logRequestStart')
+        .mockResolvedValue(mockAuditLog);
       jest.spyOn(auditService, 'logRequestEnd').mockResolvedValue({
         ...mockAuditLog,
         status: AuditStatus.FINISHED_WITH_ERROR,
@@ -129,7 +136,7 @@ describe('AuditInterceptor', () => {
       // Execute the observable and catch the error
       await new Promise((resolve) => {
         result.subscribe(
-          () => { },
+          () => {},
           () => resolve(null),
         );
       });
@@ -160,13 +167,18 @@ describe('AuditInterceptor', () => {
         getClass: () => ({ name: 'UsersController' }),
       } as unknown as ExecutionContext;
 
-      jest.spyOn(auditService, 'logRequestStart').mockResolvedValue(mockAuditLog);
+      jest
+        .spyOn(auditService, 'logRequestStart')
+        .mockResolvedValue(mockAuditLog);
 
       const mockHandlerCallable: CallHandler = {
         handle: () => of({ data: 'test' }),
       };
 
-      const result = await auditInterceptor.intercept(mockContext, mockHandlerCallable);
+      const result = await auditInterceptor.intercept(
+        mockContext,
+        mockHandlerCallable,
+      );
 
       await new Promise((resolve) => {
         result.subscribe(() => resolve(null));
@@ -184,12 +196,13 @@ describe('AuditInterceptor', () => {
       const mockResponse = { statusCode: 200 };
 
       const mockHandler: CallHandler = {
-        handle: () => new Observable((observer) => {
-          setTimeout(() => {
-            observer.next({ data: 'test' });
-            observer.complete();
-          }, 50);
-        }),
+        handle: () =>
+          new Observable((observer) => {
+            setTimeout(() => {
+              observer.next({ data: 'test' });
+              observer.complete();
+            }, 50);
+          }),
       };
 
       // Mock the reflector to return true (decorator is present)
@@ -204,7 +217,9 @@ describe('AuditInterceptor', () => {
         getClass: () => ({ name: 'TestController' }),
       } as unknown as ExecutionContext;
 
-      jest.spyOn(auditService, 'logRequestStart').mockResolvedValue(mockAuditLog);
+      jest
+        .spyOn(auditService, 'logRequestStart')
+        .mockResolvedValue(mockAuditLog);
       jest.spyOn(auditService, 'logRequestEnd').mockResolvedValue(mockAuditLog);
 
       const result = await auditInterceptor.intercept(mockContext, mockHandler);
@@ -241,7 +256,9 @@ describe('AuditInterceptor', () => {
         getClass: () => ({ name: 'TestController' }),
       } as unknown as ExecutionContext;
 
-      jest.spyOn(auditService, 'logRequestStart').mockResolvedValue(mockAuditLog);
+      jest
+        .spyOn(auditService, 'logRequestStart')
+        .mockResolvedValue(mockAuditLog);
       jest.spyOn(auditService, 'logRequestEnd').mockResolvedValue(mockAuditLog);
 
       const result = await auditInterceptor.intercept(mockContext, mockHandler);
@@ -280,14 +297,16 @@ describe('AuditInterceptor', () => {
         getClass: () => ({ name: 'TestController' }),
       } as unknown as ExecutionContext;
 
-      jest.spyOn(auditService, 'logRequestStart').mockResolvedValue(mockAuditLog);
+      jest
+        .spyOn(auditService, 'logRequestStart')
+        .mockResolvedValue(mockAuditLog);
       jest.spyOn(auditService, 'logRequestEnd').mockResolvedValue(mockAuditLog);
 
       const result = await auditInterceptor.intercept(mockContext, mockHandler);
 
       await new Promise((resolve) => {
         result.subscribe(
-          () => { },
+          () => {},
           () => resolve(null),
         );
       });
@@ -324,14 +343,16 @@ describe('AuditInterceptor', () => {
         getClass: () => ({ name: 'TestController' }),
       } as unknown as ExecutionContext;
 
-      jest.spyOn(auditService, 'logRequestStart').mockResolvedValue(mockAuditLog);
+      jest
+        .spyOn(auditService, 'logRequestStart')
+        .mockResolvedValue(mockAuditLog);
       jest.spyOn(auditService, 'logRequestEnd').mockResolvedValue(mockAuditLog);
 
       const result = await auditInterceptor.intercept(mockContext, mockHandler);
 
       await new Promise((resolve) => {
         result.subscribe(
-          () => { },
+          () => {},
           () => resolve(null),
         );
       });
@@ -384,7 +405,9 @@ describe('AuditInterceptor', () => {
 
       // Reflector returns true (decorator is present)
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(true);
-      jest.spyOn(auditService, 'logRequestStart').mockResolvedValue(mockAuditLog);
+      jest
+        .spyOn(auditService, 'logRequestStart')
+        .mockResolvedValue(mockAuditLog);
       jest.spyOn(auditService, 'logRequestEnd').mockResolvedValue({
         ...mockAuditLog,
         status: AuditStatus.FINISHED,

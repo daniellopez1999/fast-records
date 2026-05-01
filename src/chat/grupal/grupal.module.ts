@@ -13,5 +13,4 @@ import { GroupChatsRepository } from './repositories/group-message.repository';
   providers: [GrupalService, GroupMessagesRepository, GroupChatsRepository],
   exports: [GrupalService],
 })
-export class GrupalModule { }
-
+export class GrupalModule {}

@@ -38,4 +38,3 @@ export class Record {
   @JoinColumn({ name: 'circuit_id' })
   circuit: Circuit;
 }
-
