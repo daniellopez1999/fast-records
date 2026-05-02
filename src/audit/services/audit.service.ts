@@ -8,7 +8,7 @@ export class AuditService {
   constructor(
     private readonly auditLogRepository: AuditLogRepository,
     private readonly dataSource: DataSource,
-  ) { }
+  ) {}
 
   /**
    * Gets the user agent string and parses it to extract device, browser, OS, and version information.

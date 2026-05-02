@@ -8,7 +8,6 @@ describe('UsersService', () => {
   let usersService: UsersService;
   let usersRepository: UsersRepository;
   let queryRunner: QueryRunner;
-  let dataSource: DataSource;
 
   beforeEach(async () => {
     const mockQueryRunner = {
@@ -46,7 +45,6 @@ describe('UsersService', () => {
 
     usersService = module.get<UsersService>(UsersService);
     usersRepository = module.get<UsersRepository>(UsersRepository);
-    dataSource = module.get<DataSource>(DataSource);
     queryRunner = mockDataSource.createQueryRunner();
   });
 
