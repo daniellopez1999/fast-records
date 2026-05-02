@@ -2,9 +2,10 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
-[Project Structure](STRUCTURE.md)
-[Project Planning](PROJECT_PLANNING.md)
-[Audit Decorators](AUDIT_DECORATORS_USAGE.md)
+[Project Structure](documentation/STRUCTURE.md)
+[Project Planning](documentation/PROJECT_PLANNING.md)
+[Audit Decorators](documentation/AUDIT_DECORATORS_USAGE.md)
+[Docker Quick Start](documentation/DOCKER_QUICK_START.md)
 
 ## Project setup
 
