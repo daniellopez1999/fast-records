@@ -116,11 +116,12 @@ describe('UsersRepository', () => {
         .spyOn(queryRunner.manager, 'findOne')
         .mockResolvedValue(existingUser);
 
-      const result = await usersRepository.findByEmail(queryRunner, userData);
+      const result = await usersRepository.findByEmail(queryRunner, userData, ['email']);
 
       expect(result).toEqual(existingUser);
       expect(queryRunner.manager.findOne).toHaveBeenCalledWith(User, {
         where: { email },
+        select: ['email'],
       });
     });
 
@@ -130,11 +131,12 @@ describe('UsersRepository', () => {
 
       jest.spyOn(queryRunner.manager, 'findOne').mockResolvedValue(null);
 
-      const result = await usersRepository.findByEmail(queryRunner, userData);
+      const result = await usersRepository.findByEmail(queryRunner, userData, ['email']);
 
       expect(result).toBeNull();
       expect(queryRunner.manager.findOne).toHaveBeenCalledWith(User, {
         where: { email },
+        select: ['email'],
       });
     });
 
@@ -144,10 +146,11 @@ describe('UsersRepository', () => {
 
       jest.spyOn(queryRunner.manager, 'findOne').mockResolvedValue(null);
 
-      await usersRepository.findByEmail(queryRunner, userData);
+      await usersRepository.findByEmail(queryRunner, userData, ['email']);
 
       expect(queryRunner.manager.findOne).toHaveBeenCalledWith(User, {
         where: { email },
+        select: ['email'],
       });
     });
 
@@ -159,7 +162,7 @@ describe('UsersRepository', () => {
         .mockRejectedValue(new Error('Database connection error'));
 
       await expect(
-        usersRepository.findByEmail(queryRunner, userData),
+        usersRepository.findByEmail(queryRunner, userData, ['email']),
       ).rejects.toThrow('Database connection error');
     });
   });

@@ -8,7 +8,7 @@ export class UsersRepository {
   constructor(
     @InjectRepository(User)
     private readonly repository: Repository<User>,
-  ) {}
+  ) { }
 
   async create(
     queryRunner: QueryRunner,
@@ -21,9 +21,11 @@ export class UsersRepository {
   async findByEmail(
     queryRunner: QueryRunner,
     userData: Partial<User>,
+    fieldsToSelect: (keyof User)[],
   ): Promise<User | null> {
     const existingEmail = await queryRunner.manager.findOne(User, {
       where: { email: userData.email },
+      select: fieldsToSelect,
     });
     if (existingEmail) return existingEmail;
     return null;

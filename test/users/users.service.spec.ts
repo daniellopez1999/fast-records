@@ -94,6 +94,7 @@ describe('UsersService', () => {
       expect(usersRepository.findByEmail).toHaveBeenCalledWith(
         queryRunner,
         userData,
+        ['email'],
       );
       expect(usersRepository.create).toHaveBeenCalledWith(
         queryRunner,

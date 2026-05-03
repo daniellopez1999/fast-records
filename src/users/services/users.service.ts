@@ -8,7 +8,7 @@ export class UsersService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly usersRepository: UsersRepository,
-  ) {}
+  ) { }
 
   findAll() {
     return [];
@@ -23,6 +23,7 @@ export class UsersService {
       const user = await this.usersRepository.findByEmail(
         queryRunner,
         userData,
+        ['email']
       );
 
       // If user exists, enters if statement, otherwise creates user
