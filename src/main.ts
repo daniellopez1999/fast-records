@@ -11,7 +11,20 @@ async function bootstrap() {
   configService.validateEnvironmentVariables();
 
   const port = configService.get('PORT');
+  const nodeEnv = configService.get('NODE_ENV');
 
+  // Configure CORS based on environment
+  const corsOptions =
+    nodeEnv === 'development'
+      ? { origin: '*', credentials: false } // Allow all origins in development
+      : {
+        origin: configService.get('CORS_ORIGIN') || 'https://fast-records.com',
+        credentials: true,
+      };
+
+  app.enableCors(corsOptions);
+
+  // Global validation pipe for request validation
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
