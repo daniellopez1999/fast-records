@@ -1,0 +1,23 @@
+# Development stage with hot reload
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy only package files and config
+COPY package*.json ./
+COPY nest-cli.json ./
+COPY tsconfig*.json ./
+
+# Install all dependencies (including devDependencies)
+RUN npm ci
+
+# Source code will be mounted as a volume from docker-compose
+
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=25s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:3000', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})" || exit 1
+
+# Start with watch mode - src will be mounted as volume
+CMD ["npm", "run", "start:dev"]

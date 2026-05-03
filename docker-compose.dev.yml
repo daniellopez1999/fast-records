@@ -48,21 +48,23 @@ services:
       retries: 2
       start_period: 3s
 
-  # NestJS Application
+  # NestJS Application (Development with hot reload)
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: fast-records-app
     restart: unless-stopped
     init: true
+    stdin_open: true
+    tty: true
     depends_on:
       db:
         condition: service_healthy
       minio:
         condition: service_healthy
     environment:
-      NODE_ENV: ${NODE_ENV:-production}
+      NODE_ENV: development
       PORT: ${PORT}
       DB_HOST: db
       DB_PORT: 5432
@@ -79,11 +81,15 @@ services:
       MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME}
       API_URL: ${API_URL}
       CORS_ORIGIN: ${CORS_ORIGIN}
-      LOG_LEVEL: ${LOG_LEVEL}
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
     ports:
       - "${PORT}:${PORT}"
+      - "9229:9229"  # Debug port for node inspector
     volumes:
-      - ./src:/app/src:ro
+      - ./src:/app/src:ro                      # Mount src in read-only for hot reload
+      - ./tsconfig.json:/app/tsconfig.json:ro  # Mount tsconfig
+      - ./nest-cli.json:/app/nest-cli.json:ro  # Mount nest config
+      - /app/node_modules                      # Persist node_modules in volume
     networks:
       - fast-records-network
     healthcheck:
