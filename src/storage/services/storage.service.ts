@@ -1,5 +1,10 @@
 import { ConfigService } from '@config/config.service';
-import { Injectable, InternalServerErrorException, OnModuleInit, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  OnModuleInit,
+  Logger,
+} from '@nestjs/common';
 import * as Minio from 'minio';
 import { Readable } from 'stream';
 
@@ -28,9 +33,9 @@ export class StorageService implements OnModuleInit {
   }
 
   /**
-   * @description Validates the connection to the Minio server and checks if the specified bucket exists. 
-   * If the bucket does not exist, it creates it. 
-   * This method is called during module initialization to ensure that the storage service is ready 
+   * @description Validates the connection to the Minio server and checks if the specified bucket exists.
+   * If the bucket does not exist, it creates it.
+   * This method is called during module initialization to ensure that the storage service is ready
    * to use before handling any requests.
    */
   async validateOnInit() {
@@ -40,11 +45,17 @@ export class StorageService implements OnModuleInit {
       const bucketName = this.configService.get('MINIO_BUCKET_NAME');
       const bucketExists = await this.minioClient.bucketExists(bucketName);
       if (!bucketExists) {
-        await this.createBucket(bucketName, this.configService.get('MINIO_REGION'));
+        await this.createBucket(
+          bucketName,
+          this.configService.get('MINIO_REGION'),
+        );
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new InternalServerErrorException(`Failed to connect to Minio server: ${errorMessage}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      throw new InternalServerErrorException(
+        `Failed to connect to Minio server: ${errorMessage}`,
+      );
     }
   }
 
@@ -52,8 +63,11 @@ export class StorageService implements OnModuleInit {
     try {
       await this.minioClient.makeBucket(bucketName, bucketRegion);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new InternalServerErrorException(`Failed to create bucket: ${errorMessage}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      throw new InternalServerErrorException(
+        `Failed to create bucket: ${errorMessage}`,
+      );
     }
   }
 
@@ -78,20 +92,36 @@ export class StorageService implements OnModuleInit {
     metadata?: Record<string, string>,
   ): Promise<{ objectName: string }> {
     try {
-      this.logger.debug(`Uploading file: ${objectName} to bucket: ${bucketName}`);
+      this.logger.debug(
+        `Uploading file: ${objectName} to bucket: ${bucketName}`,
+      );
 
       // Convert Buffer to Readable stream if needed
-      const stream = Buffer.isBuffer(fileStream) ? Readable.from(fileStream) : fileStream;
+      const stream = Buffer.isBuffer(fileStream)
+        ? Readable.from(fileStream)
+        : fileStream;
       const size = Buffer.isBuffer(fileStream) ? fileStream.length : undefined;
 
-      await this.minioClient.putObject(bucketName, objectName, stream, size, metadata || {});
+      await this.minioClient.putObject(
+        bucketName,
+        objectName,
+        stream,
+        size,
+        metadata || {},
+      );
 
       this.logger.log(`File successfully uploaded: ${objectName}`);
       return { objectName };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Failed to upload file: ${errorMessage}`, error instanceof Error ? error.stack : '');
-      throw new InternalServerErrorException(`Failed to upload file: ${errorMessage}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        `Failed to upload file: ${errorMessage}`,
+        error instanceof Error ? error.stack : '',
+      );
+      throw new InternalServerErrorException(
+        `Failed to upload file: ${errorMessage}`,
+      );
     }
   }
 
@@ -100,10 +130,12 @@ export class StorageService implements OnModuleInit {
    * @param bucketName - The name of the bucket
    * @param objectName - The name of the object (file path in bucket)
    * @returns Buffer containing the file data
-  */
+   */
   async getFile(bucketName: string, objectName: string): Promise<Buffer> {
     try {
-      this.logger.debug(`Retrieving file: ${objectName} from bucket: ${bucketName}`);
+      this.logger.debug(
+        `Retrieving file: ${objectName} from bucket: ${bucketName}`,
+      );
 
       const stream = await this.minioClient.getObject(bucketName, objectName);
 
@@ -113,11 +145,16 @@ export class StorageService implements OnModuleInit {
         stream.on('end', () => resolve(Buffer.concat(chunks)));
         stream.on('error', (err) => reject(err));
       });
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Failed to get file: ${errorMessage}`, error instanceof Error ? error.stack : '');
-      throw new InternalServerErrorException(`Failed to get file: ${errorMessage}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        `Failed to get file: ${errorMessage}`,
+        error instanceof Error ? error.stack : '',
+      );
+      throw new InternalServerErrorException(
+        `Failed to get file: ${errorMessage}`,
+      );
     }
   }
 

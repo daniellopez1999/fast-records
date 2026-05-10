@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, Module } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../../src/users/entities/user.entity';
@@ -168,9 +168,18 @@ describe('Auth (e2e)', () => {
           expect(res.body).toHaveProperty('message');
           expect(res.body.data).toHaveProperty('access_token');
           expect(res.body.data).toHaveProperty('user');
-          expect(res.body.data.user).toHaveProperty('email', validUserData.email);
-          expect(res.body.data.user).toHaveProperty('first_name', validUserData.first_name);
-          expect(res.body.data.user).toHaveProperty('last_name', validUserData.last_name);
+          expect(res.body.data.user).toHaveProperty(
+            'email',
+            validUserData.email,
+          );
+          expect(res.body.data.user).toHaveProperty(
+            'first_name',
+            validUserData.first_name,
+          );
+          expect(res.body.data.user).toHaveProperty(
+            'last_name',
+            validUserData.last_name,
+          );
         });
     });
 
@@ -185,6 +194,7 @@ describe('Auth (e2e)', () => {
     });
 
     it('should reject registration with missing email', () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { email, ...dataWithoutEmail } = validUserData;
       return request(app.getHttpServer())
         .post('/auth/register')
@@ -193,6 +203,7 @@ describe('Auth (e2e)', () => {
     });
 
     it('should reject registration with missing password', () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...dataWithoutPassword } = validUserData;
       return request(app.getHttpServer())
         .post('/auth/register')
@@ -210,11 +221,14 @@ describe('Auth (e2e)', () => {
         })
         .expect(400)
         .expect((res) => {
-          expect(res.body.message).toContain('Password must be at least 6 characters');
+          expect(res.body.message).toContain(
+            'Password must be at least 6 characters',
+          );
         });
     });
 
     it('should reject registration with missing first_name', () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { first_name, ...dataWithoutFirstName } = validUserData;
       return request(app.getHttpServer())
         .post('/auth/register')
@@ -223,6 +237,7 @@ describe('Auth (e2e)', () => {
     });
 
     it('should reject registration with missing last_name', () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { last_name, ...dataWithoutLastName } = validUserData;
       return request(app.getHttpServer())
         .post('/auth/register')

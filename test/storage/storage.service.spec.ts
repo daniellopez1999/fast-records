@@ -92,12 +92,17 @@ describe('StorageService', () => {
 
       await storageService.validateOnInit();
 
-      expect(mockMinioClient.makeBucket).toHaveBeenCalledWith('test-bucket', 'us-east-1');
+      expect(mockMinioClient.makeBucket).toHaveBeenCalledWith(
+        'test-bucket',
+        'us-east-1',
+      );
     });
 
     it('should throw InternalServerErrorException if connection fails', async () => {
       const errorMessage = 'Connection failed';
-      (mockMinioClient.listBuckets as jest.Mock).mockRejectedValue(new Error(errorMessage));
+      (mockMinioClient.listBuckets as jest.Mock).mockRejectedValue(
+        new Error(errorMessage),
+      );
 
       await expect(storageService.validateOnInit()).rejects.toThrow(
         InternalServerErrorException,
@@ -107,7 +112,9 @@ describe('StorageService', () => {
     it('should throw InternalServerErrorException on bucket check error', async () => {
       const errorMessage = 'Bucket check failed';
       (mockMinioClient.listBuckets as jest.Mock).mockResolvedValue([]);
-      (mockMinioClient.bucketExists as jest.Mock).mockRejectedValue(new Error(errorMessage));
+      (mockMinioClient.bucketExists as jest.Mock).mockRejectedValue(
+        new Error(errorMessage),
+      );
 
       await expect(storageService.validateOnInit()).rejects.toThrow(
         InternalServerErrorException,
@@ -121,7 +128,10 @@ describe('StorageService', () => {
 
       await storageService.createBucket('new-bucket', 'us-east-1');
 
-      expect(mockMinioClient.makeBucket).toHaveBeenCalledWith('new-bucket', 'us-east-1');
+      expect(mockMinioClient.makeBucket).toHaveBeenCalledWith(
+        'new-bucket',
+        'us-east-1',
+      );
     });
 
     it('should throw InternalServerErrorException if bucket creation fails', async () => {
@@ -222,7 +232,10 @@ describe('StorageService', () => {
 
       (mockMinioClient.getObject as jest.Mock).mockReturnValue(mockStream);
 
-      const result = await storageService.getFile('test-bucket', 'test-file.txt');
+      const result = await storageService.getFile(
+        'test-bucket',
+        'test-file.txt',
+      );
 
       expect(result).toEqual(testData);
       expect(mockMinioClient.getObject).toHaveBeenCalledWith(
@@ -238,7 +251,10 @@ describe('StorageService', () => {
 
       (mockMinioClient.getObject as jest.Mock).mockReturnValue(mockStream);
 
-      const result = await storageService.getFile('test-bucket', 'test-file.txt');
+      const result = await storageService.getFile(
+        'test-bucket',
+        'test-file.txt',
+      );
 
       expect(result.toString()).toBe('chunk1chunk2');
     });
@@ -285,7 +301,9 @@ describe('StorageService', () => {
     it('should handle full upload and download cycle', async () => {
       const buffer = Buffer.from('test file content');
       (mockMinioClient.putObject as jest.Mock).mockResolvedValue(undefined);
-      (mockMinioClient.getObject as jest.Mock).mockReturnValue(Readable.from([buffer]));
+      (mockMinioClient.getObject as jest.Mock).mockReturnValue(
+        Readable.from([buffer]),
+      );
 
       const uploadResult = await storageService.uploadFile(
         'test-bucket',

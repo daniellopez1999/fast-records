@@ -6,4 +6,4 @@ import { ConfigService } from '@config/config.service';
   providers: [StorageService, ConfigService],
   exports: [StorageService],
 })
-export class StorageModule { }
+export class StorageModule {}
