@@ -1,5 +1,9 @@
 import { Result } from '@common/interfaces/interfaces';
 
+/**
+ * @description Utility class for building standardized API responses
+ * Provides methods for creating success and failure responses with consistent structure
+ */
 export class ResponseBuilder {
   /**
    * Builds a successful response with the provided message and optional data.

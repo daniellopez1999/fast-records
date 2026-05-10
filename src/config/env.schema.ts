@@ -19,10 +19,11 @@ export const envSchema = z.object({
   // Minio/S3
   MINIO_ENDPOINT: z.string(),
   MINIO_PORT: z.coerce.number(),
-  MINIO_USE_SSL: z.coerce.boolean(),
+  MINIO_USE_SSL: z.string(),
   MINIO_ACCESS_KEY: z.string(),
   MINIO_SECRET_KEY: z.string(),
   MINIO_BUCKET_NAME: z.string(),
+  MINIO_REGION: z.string(),
 
   // API
   API_URL: z.string().url().optional(),

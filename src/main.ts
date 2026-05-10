@@ -6,9 +6,8 @@ import { ConfigService } from './config/config.service';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Validate environment variables with Zod
+  // Get config service (already validated in constructor)
   const configService = app.get(ConfigService);
-  configService.validateEnvironmentVariables();
 
   const port = configService.get('PORT');
   const nodeEnv = configService.get('NODE_ENV');
