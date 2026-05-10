@@ -8,29 +8,29 @@
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
+    "^.+\\.(t|j)s$": [
+      "ts-jest",
+      {
+        "tsconfig": {
+          "baseUrl": ".",
+          "paths": {
+            "@config/*": [
+              "./src/config/*"
+            ],
+            "@common/*": [
+              "./src/common/*"
+            ],
+            "@auth/*": [
+              "./src/auth/*"
+            ]
+          }
+        }
+      }
+    ]
   },
   "moduleNameMapper": {
     "^@config/(.*)$": "<rootDir>/../src/config/$1",
     "^@common/(.*)$": "<rootDir>/../src/common/$1",
     "^@auth/(.*)$": "<rootDir>/../src/auth/$1"
-  },
-  "globals": {
-    "ts-jest": {
-      "tsconfig": {
-        "baseUrl": ".",
-        "paths": {
-          "@config/*": [
-            "./src/config/*"
-          ],
-          "@common/*": [
-            "./src/common/*"
-          ],
-          "@auth/*": [
-            "./src/auth/*"
-          ]
-        }
-      }
-    }
   }
 }
