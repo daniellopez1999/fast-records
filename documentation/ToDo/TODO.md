@@ -54,11 +54,10 @@
 - Implement Delete Record endpoint
 
 ## Storage
-- Implement Minio Storage Service
-- Implement Validation Minio works on Bootstrap
-- Implement Upload File endpoint
-- Implement Download File endpoint
-- Implement Delete File endpoint
+- Implement Minio Storage Service ✅ 
+- Implement Validation Minio works on Bootstrap ✅ 
+- Implement Upload File endpoint ✅ 
+- Implement Download File endpoint ✅ 
 
 ## Common
 - ✅ Implement Custom Decorators

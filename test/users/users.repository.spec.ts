@@ -116,7 +116,9 @@ describe('UsersRepository', () => {
         .spyOn(queryRunner.manager, 'findOne')
         .mockResolvedValue(existingUser);
 
-      const result = await usersRepository.findByEmail(queryRunner, userData, ['email']);
+      const result = await usersRepository.findByEmail(queryRunner, userData, [
+        'email',
+      ]);
 
       expect(result).toEqual(existingUser);
       expect(queryRunner.manager.findOne).toHaveBeenCalledWith(User, {
@@ -131,7 +133,9 @@ describe('UsersRepository', () => {
 
       jest.spyOn(queryRunner.manager, 'findOne').mockResolvedValue(null);
 
-      const result = await usersRepository.findByEmail(queryRunner, userData, ['email']);
+      const result = await usersRepository.findByEmail(queryRunner, userData, [
+        'email',
+      ]);
 
       expect(result).toBeNull();
       expect(queryRunner.manager.findOne).toHaveBeenCalledWith(User, {

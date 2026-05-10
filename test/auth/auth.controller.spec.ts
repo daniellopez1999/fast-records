@@ -40,6 +40,7 @@ describe('AuthController', () => {
       const mockResponse: Result<RegisterResponse | null> = {
         statusCode: 201,
         message: 'User registered successfully',
+        timestamp: new Date().toISOString(),
         data: {
           access_token: 'token123',
           user: {
@@ -76,6 +77,7 @@ describe('AuthController', () => {
       const mockErrorResponse: Result<null> = {
         statusCode: 409,
         message: 'User with this email already exists',
+        timestamp: new Date().toISOString(),
         data: null,
         success: false,
       };
@@ -103,6 +105,7 @@ describe('AuthController', () => {
         message: 'User registered successfully',
         data: null,
         success: true,
+        timestamp: new Date().toISOString(),
       };
 
       jest.spyOn(authService, 'register').mockResolvedValue(mockResponse);

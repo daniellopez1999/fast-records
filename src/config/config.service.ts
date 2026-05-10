@@ -7,7 +7,9 @@ export class ConfigService {
   private config: EnvConfig;
   private readonly logger = new Logger(ConfigService.name);
 
-  constructor() {}
+  constructor() {
+    this.validateEnvironmentVariables();
+  }
 
   /**
    * @description Validates the environment variables using Zod schema.
