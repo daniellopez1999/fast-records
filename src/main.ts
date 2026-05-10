@@ -18,7 +18,7 @@ async function bootstrap() {
     nodeEnv === 'development'
       ? { origin: '*', credentials: false } // Allow all origins in development
       : {
-        origin: configService.get('CORS_ORIGIN') || 'https://fast-records.com',
+        origin: configService.get('CORS_ORIGIN'), // Restrict to specific origin in production
         credentials: true,
       };
 

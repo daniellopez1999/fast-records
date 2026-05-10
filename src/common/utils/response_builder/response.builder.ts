@@ -18,6 +18,7 @@ export class ResponseBuilder {
       message: message,
       data: data,
       success: true,
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -37,6 +38,7 @@ export class ResponseBuilder {
       message: message,
       data: null,
       success: false,
+      timestamp: new Date().toISOString(),
     };
   }
 }
