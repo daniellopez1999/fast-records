@@ -2,10 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { AppController } from './../src/app.controller';
+import { AppService } from './../src/app.service';
+import { ResponseInterceptor } from './../src/common/interceptors/response.interceptor';
 import { User } from './../src/users/entities/user.entity';
 import { StorageService } from './../src/storage/services/storage.service';
 import { ConfigService } from './../src/config/config.service';
-import { AppModule } from './../src/app.module';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -16,6 +19,11 @@ describe('AppController (e2e)', () => {
         const config = {
           JWT_SECRET: 'test-secret-key',
           JWT_EXPIRES_IN: '1h',
+          DB_HOST: 'localhost',
+          DB_PORT: 5432,
+          DB_USER: 'test',
+          DB_PASSWORD: 'test',
+          DB_NAME: 'test',
         };
         return config[key];
       }),
@@ -39,15 +47,27 @@ describe('AppController (e2e)', () => {
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    })
-      .overrideProvider(ConfigService)
-      .useValue(mockConfigService)
-      .overrideProvider(StorageService)
-      .useValue(mockStorageService)
-      .overrideProvider(getRepositoryToken(User))
-      .useValue(mockUserRepository)
-      .compile();
+      controllers: [AppController],
+      providers: [
+        AppService,
+        {
+          provide: StorageService,
+          useValue: mockStorageService,
+        },
+        {
+          provide: ConfigService,
+          useValue: mockConfigService,
+        },
+        {
+          provide: getRepositoryToken(User),
+          useValue: mockUserRepository,
+        },
+        {
+          provide: APP_INTERCEPTOR,
+          useClass: ResponseInterceptor,
+        },
+      ],
+    }).compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
