@@ -3,12 +3,12 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { AppController } from './../src/app.controller';
-import { AppService } from './../src/app.service';
-import { ResponseInterceptor } from './../src/common/interceptors/response.interceptor';
-import { User } from './../src/users/entities/user.entity';
-import { StorageService } from './../src/storage/services/storage.service';
-import { ConfigService } from './../src/config/config.service';
+import { AppController } from '../../src/app.controller';
+import { AppService } from '../../src/app.service';
+import { ResponseInterceptor } from '../../src/common/interceptors/response.interceptor';
+import { User } from '../../src/users/entities/user.entity';
+import { StorageService } from '../../src/storage/services/storage.service';
+import { ConfigService } from '../../src/config/config.service';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
