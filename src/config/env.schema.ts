@@ -14,7 +14,8 @@ export const envSchema = z.object({
 
   // JWT
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
-  JWT_EXPIRATION: z.string(),
+  JWT_REFRESH_TOKEN_EXPIRATION: z.string(),
+  JWT_ACCESS_TOKEN_EXPIRATION: z.string(),
 
   // Minio/S3
   MINIO_ENDPOINT: z.string(),

@@ -22,3 +22,12 @@ export interface RegisterResponse {
   access_token: string;
   user: UserWithoutPassword;
 }
+
+export interface LoginResponse {
+  access_token: string;
+  user: UserWithoutPassword;
+}
+
+export interface RefreshResponse {
+  access_token: string;
+}

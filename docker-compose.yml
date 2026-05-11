@@ -61,26 +61,14 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
-      NODE_ENV: ${NODE_ENV:-production}
-      PORT: ${PORT}
+      # Override host values to use Docker service names instead of localhost
       DB_HOST: db
       DB_PORT: 5432
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRATION: ${JWT_EXPIRATION}
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
-      MINIO_USE_SSL: ${MINIO_USE_SSL}
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME}
-      MINIO_REGION: ${MINIO_REGION}
-      API_URL: ${API_URL}
-      CORS_ORIGIN: ${CORS_ORIGIN}
-      LOG_LEVEL: ${LOG_LEVEL}
     ports:
       - "${PORT}:${PORT}"
     volumes:

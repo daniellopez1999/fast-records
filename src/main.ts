@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { ConfigService } from './config/config.service';
 
@@ -15,13 +16,14 @@ async function bootstrap() {
   // Configure CORS based on environment
   const corsOptions =
     nodeEnv === 'development'
-      ? { origin: '*', credentials: false } // Allow all origins in development
+      ? { origin: true, credentials: true } // Reflect request origin in development (needed for cookies)
       : {
           origin: configService.get('CORS_ORIGIN'), // Restrict to specific origin in production
           credentials: true,
         };
 
   app.enableCors(corsOptions);
+  app.use(cookieParser());
 
   // Global validation pipe for request validation
   app.useGlobalPipes(

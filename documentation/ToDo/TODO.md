@@ -4,10 +4,10 @@
 - ✅ Implement Audit Interceptor and Decorator
 
 ## Auth
-- Implement Login endpoint
+- ✅ Implement Login endpoint
 - ✅ Implement Register endpoint
-- Implement Refresh Token endpoint
-- Implement Logout endpoint
+- ✅ Implement Refresh Token endpoint
+- ✅ Implement Logout endpoint
 
 ## Users
 - ✅ Implement GetAll endpoint

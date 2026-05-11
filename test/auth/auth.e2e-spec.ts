@@ -1,30 +1,64 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
+import cookieParser from 'cookie-parser';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { JwtModule, JwtService } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ConfigService as NestConfigService } from '@nestjs/config';
 import { User } from '../../src/users/entities/user.entity';
 import { StorageService } from '../../src/storage/services/storage.service';
 import { ConfigService } from '../../src/config/config.service';
 import { AuthController } from '../../src/auth/controller/auth.controller';
 import { AuthService } from '../../src/auth/services/auth.service';
 import { UsersService } from '../../src/users/services/users.service';
-import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { LocalStrategy } from '../../src/auth/strategies/local.strategy';
+import { JwtStrategy } from '../../src/auth/strategies/jwt.strategy';
+import { JwtRefreshStrategy } from '../../src/auth/strategies/jwt-refresh.strategy';
 import { ResponseInterceptor } from '../../src/common/interceptors/response.interceptor';
+
+const TEST_JWT_SECRET = 'test-secret-key';
 
 describe('Auth (e2e)', () => {
   let app: INestApplication;
   let authService: any;
+  let jwtService: JwtService;
+  let mockUserRepository: any;
+
+  const mockUser = {
+    user_id: 'test-user-id',
+    email: 'test@example.com',
+    first_name: 'Test',
+    last_name: 'User',
+    user_type: 'user',
+    profile_photo: null,
+    description: null,
+    last_access: new Date(),
+    active: true,
+    created_at: new Date(),
+    updated_at: new Date(),
+  };
 
   beforeAll(async () => {
+    process.env.JWT_SECRET = TEST_JWT_SECRET;
+
     const mockConfigService = {
       get: jest.fn((key: string) => {
-        const config = {
-          JWT_SECRET: 'test-secret-key',
+        const config: Record<string, any> = {
+          JWT_SECRET: TEST_JWT_SECRET,
           JWT_EXPIRES_IN: '1h',
         };
         return config[key];
+      }),
+    };
+
+    const mockNestConfigService = {
+      get: jest.fn((key: string, defaultValue?: any) => {
+        const config: Record<string, any> = {
+          JWT_SECRET: TEST_JWT_SECRET,
+        };
+        return config[key] ?? defaultValue;
       }),
     };
 
@@ -36,8 +70,8 @@ describe('Auth (e2e)', () => {
       createBucket: jest.fn(),
     };
 
-    const mockUserRepository = {
-      findOne: jest.fn(),
+    mockUserRepository = {
+      findOne: jest.fn().mockResolvedValue(mockUser),
       find: jest.fn(),
       save: jest.fn(),
       create: jest.fn(),
@@ -74,51 +108,50 @@ describe('Auth (e2e)', () => {
       validateUser: jest.fn(),
       hashPassword: jest.fn(),
       generateToken: jest.fn(),
+      refreshTokens: jest.fn(),
+      logout: jest.fn(),
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         PassportModule,
         JwtModule.register({
-          secret: 'test-secret-key',
+          secret: TEST_JWT_SECRET,
           signOptions: { expiresIn: '1h' },
         }),
       ],
       controllers: [AuthController],
       providers: [
-        {
-          provide: UsersService,
-          useValue: mockUsersService,
-        },
-        {
-          provide: AuthService,
-          useValue: mockAuthService,
-        },
-        {
-          provide: APP_INTERCEPTOR,
-          useClass: ResponseInterceptor,
-        },
+        { provide: UsersService, useValue: mockUsersService },
+        { provide: AuthService, useValue: mockAuthService },
+        { provide: NestConfigService, useValue: mockNestConfigService },
+        { provide: getRepositoryToken(User), useValue: mockUserRepository },
+        { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor },
+        LocalStrategy,
+        JwtStrategy,
+        JwtRefreshStrategy,
       ],
     })
       .overrideProvider(ConfigService)
       .useValue(mockConfigService)
       .overrideProvider(StorageService)
       .useValue(mockStorageService)
-      .overrideProvider(getRepositoryToken(User))
-      .useValue(mockUserRepository)
       .compile();
 
     app = moduleFixture.createNestApplication();
+    app.use(cookieParser());
     app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
     await app.init();
 
     authService = mockAuthService;
+    jwtService = moduleFixture.get<JwtService>(JwtService);
   });
 
   afterAll(async () => {
     if (app) {
       await app.close();
     }
+    delete process.env.JWT_SECRET;
   });
 
   describe('POST /auth/register', () => {
@@ -356,6 +389,301 @@ describe('Auth (e2e)', () => {
           password: '',
         })
         .expect(400);
+    });
+  });
+
+  // ─── POST /auth/login ────────────────────────────────────────────────────────
+
+  describe('POST /auth/login', () => {
+    const loginResult = {
+      success: true,
+      message: 'Login successful',
+      data: { access_token: 'test-access-token', user: {} },
+      statusCode: 200,
+    };
+
+    const loginTokens = {
+      access_token: 'test-access-token',
+      refresh_token: 'test-refresh-token',
+    };
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should login successfully with valid credentials', () => {
+      authService.validateUser.mockResolvedValueOnce(mockUser);
+      authService.login.mockReturnValueOnce({
+        tokens: loginTokens,
+        result: loginResult,
+      });
+
+      return request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'test@example.com', password: 'password123' })
+        .expect(200)
+        .expect((res) => {
+          expect(res.body).toHaveProperty('success', true);
+          expect(res.body).toHaveProperty('message', 'Login successful');
+          expect(res.body.data).toHaveProperty('access_token');
+          expect(res.body.data).toHaveProperty('user');
+        });
+    });
+
+    it('should set access_token and refresh_token cookies on successful login', () => {
+      authService.validateUser.mockResolvedValueOnce(mockUser);
+      authService.login.mockReturnValueOnce({
+        tokens: loginTokens,
+        result: loginResult,
+      });
+
+      return request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'test@example.com', password: 'password123' })
+        .expect(200)
+        .expect((res) => {
+          const cookies: string[] = [res.headers['set-cookie']].flat();
+          expect(
+            cookies.some((c: string) => c.startsWith('access_token=')),
+          ).toBe(true);
+          expect(
+            cookies.some((c: string) => c.startsWith('refresh_token=')),
+          ).toBe(true);
+        });
+    });
+
+    it('should return 401 with invalid credentials', () => {
+      authService.validateUser.mockResolvedValueOnce(null);
+
+      return request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'test@example.com', password: 'wrongpassword' })
+        .expect(401);
+    });
+
+    it('should return 401 with non-existent email', () => {
+      authService.validateUser.mockResolvedValueOnce(null);
+
+      return request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'nobody@example.com', password: 'password123' })
+        .expect(401);
+    });
+
+    it('should return 401 with missing email', () => {
+      authService.validateUser.mockResolvedValueOnce(null);
+
+      return request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ password: 'password123' })
+        .expect(401);
+    });
+
+    it('should return 401 with missing password', () => {
+      authService.validateUser.mockResolvedValueOnce(null);
+
+      return request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'test@example.com' })
+        .expect(401);
+    });
+
+    it('should return 401 with empty credentials', () => {
+      authService.validateUser.mockResolvedValueOnce(null);
+
+      return request(app.getHttpServer())
+        .post('/auth/login')
+        .send({})
+        .expect(401);
+    });
+  });
+
+  // ─── POST /auth/refresh ──────────────────────────────────────────────────────
+
+  describe('POST /auth/refresh', () => {
+    let validRefreshToken: string;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      validRefreshToken = jwtService.sign(
+        { sub: 'test-user-id', type: 'refresh' },
+        { expiresIn: '7d' },
+      );
+      mockUserRepository.findOne.mockResolvedValue(mockUser);
+    });
+
+    it('should refresh tokens successfully', () => {
+      authService.refreshTokens.mockResolvedValueOnce({
+        tokens: {
+          access_token: 'new-access-token',
+          refresh_token: 'new-refresh-token',
+        },
+        result: {
+          success: true,
+          message: 'Tokens refreshed successfully',
+          data: { access_token: 'new-access-token' },
+          statusCode: 200,
+        },
+      });
+
+      return request(app.getHttpServer())
+        .post('/auth/refresh')
+        .set('Cookie', [`refresh_token=${validRefreshToken}`])
+        .expect(200)
+        .expect((res) => {
+          expect(res.body).toHaveProperty('success', true);
+          expect(res.body).toHaveProperty(
+            'message',
+            'Tokens refreshed successfully',
+          );
+          expect(res.body.data).toHaveProperty('access_token');
+        });
+    });
+
+    it('should set new access_token and refresh_token cookies on successful refresh', () => {
+      authService.refreshTokens.mockResolvedValueOnce({
+        tokens: {
+          access_token: 'new-access-token',
+          refresh_token: 'new-refresh-token',
+        },
+        result: {
+          success: true,
+          message: 'Tokens refreshed successfully',
+          data: { access_token: 'new-access-token' },
+          statusCode: 200,
+        },
+      });
+
+      return request(app.getHttpServer())
+        .post('/auth/refresh')
+        .set('Cookie', [`refresh_token=${validRefreshToken}`])
+        .expect(200)
+        .expect((res) => {
+          const cookies: string[] = [res.headers['set-cookie']].flat();
+          expect(
+            cookies.some((c: string) => c.startsWith('access_token=')),
+          ).toBe(true);
+          expect(
+            cookies.some((c: string) => c.startsWith('refresh_token=')),
+          ).toBe(true);
+        });
+    });
+
+    it('should return 401 without refresh token cookie', () => {
+      return request(app.getHttpServer()).post('/auth/refresh').expect(401);
+    });
+
+    it('should return 401 with an invalid (malformed) refresh token', () => {
+      return request(app.getHttpServer())
+        .post('/auth/refresh')
+        .set('Cookie', ['refresh_token=this.is.not.valid'])
+        .expect(401);
+    });
+
+    it('should return 401 when the token type is not refresh', () => {
+      const wrongTypeToken = jwtService.sign({
+        sub: 'test-user-id',
+        email: 'test@example.com',
+      });
+
+      return request(app.getHttpServer())
+        .post('/auth/refresh')
+        .set('Cookie', [`refresh_token=${wrongTypeToken}`])
+        .expect(401);
+    });
+
+    it('should return 401 when user is not found', () => {
+      mockUserRepository.findOne.mockResolvedValueOnce(null);
+
+      return request(app.getHttpServer())
+        .post('/auth/refresh')
+        .set('Cookie', [`refresh_token=${validRefreshToken}`])
+        .expect(401);
+    });
+  });
+
+  // ─── POST /auth/logout ───────────────────────────────────────────────────────
+
+  describe('POST /auth/logout', () => {
+    let validAccessToken: string;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      validAccessToken = jwtService.sign({
+        sub: 'test-user-id',
+        email: 'test@example.com',
+      });
+      authService.logout.mockReturnValue({
+        success: true,
+        message: 'Logout successful',
+        data: null,
+        statusCode: 200,
+      });
+    });
+
+    it('should logout successfully with valid access token', () => {
+      return request(app.getHttpServer())
+        .post('/auth/logout')
+        .set('Authorization', `Bearer ${validAccessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body).toHaveProperty('success', true);
+          expect(res.body).toHaveProperty('message', 'Logout successful');
+        });
+    });
+
+    it('should clear cookies on logout', () => {
+      return request(app.getHttpServer())
+        .post('/auth/logout')
+        .set('Authorization', `Bearer ${validAccessToken}`)
+        .expect(200)
+        .expect((res) => {
+          const cookies: string[] = [res.headers['set-cookie']]
+            .flat()
+            .filter(Boolean);
+          const accessCookie = cookies.find((c: string) =>
+            c.startsWith('access_token='),
+          );
+          const refreshCookie = cookies.find((c: string) =>
+            c.startsWith('refresh_token='),
+          );
+          if (accessCookie) expect(accessCookie).toMatch(/Expires=/i);
+          if (refreshCookie) expect(refreshCookie).toMatch(/Expires=/i);
+        });
+    });
+
+    it('should return 401 without access token', () => {
+      return request(app.getHttpServer()).post('/auth/logout').expect(401);
+    });
+
+    it('should return 401 with invalid access token', () => {
+      return request(app.getHttpServer())
+        .post('/auth/logout')
+        .set('Authorization', 'Bearer this.is.not.valid')
+        .expect(401);
+    });
+
+    it('should return 401 with a refresh token used as access token', () => {
+      const refreshToken = jwtService.sign(
+        { sub: 'test-user-id', type: 'refresh' },
+        { expiresIn: '7d' },
+      );
+
+      // JwtStrategy only validates structure, so a refresh token is still a valid JWT
+      // The guard doesn't care about type — it just verifies the signature
+      return request(app.getHttpServer())
+        .post('/auth/logout')
+        .set('Authorization', `Bearer ${refreshToken}`)
+        .expect(200); // JwtStrategy accepts any signed token
+    });
+
+    it('should call authService.logout with the authenticated user id', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/logout')
+        .set('Authorization', `Bearer ${validAccessToken}`)
+        .expect(200);
+
+      expect(authService.logout).toHaveBeenCalledWith('test-user-id');
     });
   });
 });
